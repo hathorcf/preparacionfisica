@@ -209,6 +209,74 @@ var DATOS = {
               "detalle": "[10s+10s descanso] x8"
             }
           ]
+        },
+        "2026-11-13": {
+          "titulo": "Miembro superior",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press inclinado con mancuernas y pausa",
+                  "detalle": "x4-6"
+                },
+                {
+                  "nombre": "Flexiones isométricas a 90º",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/nZ3ikpE-djc?feature=share"
+                },
+                {
+                  "nombre": "Remo bird dog en banco",
+                  "detalle": "x6-8/lado",
+                  "video": "https://www.youtube.com/shorts/Xnccgl4FaRI?feature=share"
+                },
+                {
+                  "nombre": "Press hombro boca abajo",
+                  "detalle": "x10",
+                  "video": "https://youtu.be/ujnlXhIMcKc"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas",
+                  "detalle": "x4"
+                },
+                {
+                  "nombre": "Remo invertido isométrico",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/w4SEzz_FTrw?feature=share"
+                },
+                {
+                  "nombre": "Press militar con barra",
+                  "detalle": "x6-8"
+                },
+                {
+                  "nombre": "Floor slam con balón medicinal",
+                  "detalle": "x10",
+                  "video": "https://www.youtube.com/shorts/Ie8TJwDue40?feature=share"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "Complex",
+              "detalle": "4 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hang muscle snatch + push press",
+                  "detalle": "3+3",
+                  "video": "https://youtu.be/XvSeutUEydo"
+                }
+              ]
+            }
+          ]
         }
       }
     }
