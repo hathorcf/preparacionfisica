@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi entrenamiento</title>
+<style>
+  :root {
+    --chalk: #f4f5f0;
+    --card: #ffffff;
+    --ink: #17262b;
+    --muted: #5d6d72;
+    --line: #d9ddd4;
+    --accent: #0d7a85;
+    --accent-ink: #ffffff;
+    --tape: #ffd23f;
+    --rest: #e8ebe4;
+    --err: #b3261e;
+    --head: "Bahnschrift", "Arial Narrow", "Helvetica Neue Condensed", "Roboto Condensed", Arial, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --chalk: #121a1d;
+      --card: #1b272b;
+      --ink: #eef2ee;
+      --muted: #9fb0b4;
+      --line: #2e3d42;
+      --accent: #3cc3cf;
+      --accent-ink: #08272b;
+      --rest: #243236;
+      --err: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--chalk); color: var(--ink); font-family: var(--body); line-height: 1.5; min-height: 100vh; }
+  h1, h2, h3 { font-family: var(--head); margin: 0; letter-spacing: .01em; line-height: 1.1; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Formularios y botones ---------- */
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  input, textarea, select {
+    width: 100%; font: inherit; padding: 11px 13px;
+    border: 2px solid var(--line); border-radius: 6px;
+    background: var(--card); color: var(--ink); margin-bottom: 16px;
+  }
+  textarea { resize: vertical; min-height: 64px; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); outline: none; }
+  .btn {
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 6px;
+    padding: 12px 18px; font-weight: 700;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.full { width: 100%; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--line); padding: 8px 14px; font-weight: 600; }
+  .btn.danger { background: transparent; color: var(--err); border: 2px solid var(--err); padding: 8px 14px; font-weight: 600; }
+  .error { color: var(--err); font-weight: 600; min-height: 1.5em; margin: 0 0 12px; }
+
+  /* ---------- Login ---------- */
+  #login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .login-box { width: 100%; max-width: 380px; }
+  .login-box h1 { font-size: clamp(2.6rem, 11vw, 3.6rem); font-weight: 800; margin-bottom: 6px; }
+  .login-box h1 span {
+    background: var(--tape); color: #17262b; padding: 0 .18em;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+  .login-box p.sub { color: var(--muted); margin: 0 0 22px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 22px; }
+  .tabs button {
+    padding: 12px; border: 2px solid var(--line); background: var(--card);
+    border-radius: 6px; font-weight: 700;
+  }
+  .tabs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+
+  /* ---------- Cabecera ---------- */
+  header.top {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    max-width: 1000px; margin: 0 auto; padding: 20px 20px 8px;
+  }
+  header.top h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); margin-right: auto; }
+  header.top .btn { padding: 8px 14px; }
+
+  main.vista { max-width: 1000px; margin: 0 auto; padding: 8px 20px 60px; }
+
+  /* ---------- Lista de clientes ---------- */
+  .lista-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; }
+  .lista-head p { margin: 0; color: var(--muted); }
+  .clientes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .cli { display: flex; background: var(--card); border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .cli .main { flex: 1; text-align: left; background: none; border: 0; padding: 14px 16px; }
+  .cli .main:hover { background: var(--rest); }
+  .cli .nom { font-family: var(--head); font-size: 1.35rem; font-weight: 700; display: block; }
+  .cli .usr { color: var(--muted); font-size: .9rem; }
+  .cli .ed { background: none; border: 0; border-left: 2px solid var(--line); padding: 0 14px; color: var(--muted); font-weight: 600; }
+  .cli .ed:hover { background: var(--rest); }
+
+  /* ---------- Calendario ---------- */
+  .cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-head h2 { font-size: 1.7rem; }
+  .cal-head h2::first-letter, .panel .fecha::first-letter { text-transform: uppercase; }
+  .nav { display: flex; gap: 6px; }
+  .nav button { width: 40px; height: 40px; border: 2px solid var(--line); background: var(--card); border-radius: 6px; font-size: 1.1rem; }
+  .nav button.hoy { width: auto; padding: 0 12px; font-weight: 600; font-size: .95rem; }
+  .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .dow { text-align: center; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 4px 0; }
+  .day {
+    position: relative; aspect-ratio: 1 / 1.05; min-height: 52px; background: var(--card);
+    border: 2px solid transparent; border-radius: 6px; padding: 6px; text-align: left;
+    display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+  }
+  .day.empty { background: transparent; pointer-events: none; }
+  .day .n { font-weight: 700; font-size: .95rem; }
+  .day .t {
+    font-family: var(--head); font-weight: 700; font-size: .78rem; line-height: 1.1; color: var(--accent);
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .day.rest { background: var(--rest); }
+  .day.rest .t { color: var(--muted); font-weight: 600; }
+  .day.today .n { background: var(--tape); color: #17262b; padding: 0 6px; border-radius: 4px; align-self: flex-start; }
+  .day.sel { border-color: var(--accent); }
+  .day:hover:not(.empty) { border-color: var(--line); }
+  .day.sel:hover { border-color: var(--accent); }
+  @media (max-width: 560px) {
+    .day { padding: 4px; aspect-ratio: auto; min-height: 56px; }
+    .day .t { font-size: 0; height: 8px; width: 8px; border-radius: 50%; background: var(--accent); }
+    .day.rest .t { background: var(--muted); }
+  }
+
+  /* ---------- Panel del día ---------- */
+  .panel { background: var(--card); border-radius: 10px; padding: 22px; border: 2px solid var(--line); position: sticky; top: 16px; }
+  @media (max-width: 860px) { .panel { position: static; } }
+  .panel .fecha { color: var(--muted); font-weight: 600; margin: 0 0 6px; }
+  .panel h3 { font-size: 2rem; margin-bottom: 12px; }
+  .notas { background: var(--chalk); border-left: 5px solid var(--tape); padding: 10px 12px; border-radius: 0 6px 6px 0; margin: 0 0 16px; }
+  .ejercicios { list-style: none; margin: 0; padding: 0; }
+  .ejercicios > li { padding: 12px 0; border-top: 1px solid var(--line); }
+  .ejercicios > li:first-child { border-top: 0; padding-top: 0; }
+  .ejercicios .nom { font-weight: 700; display: block; }
+  .ejercicios .det { color: var(--muted); }
+  .vacio { color: var(--muted); margin: 0; }
+  .circuito { border: 2px solid var(--accent); border-radius: 8px; padding: 12px 14px; }
+  .circuito .cab { font-family: var(--head); font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .circuito .info { color: var(--muted); margin-bottom: 8px; display: block; }
+  .circuito ul { list-style: none; margin: 0; padding: 0; }
+  .circuito li { padding: 6px 0; border-top: 1px dashed var(--line); }
+  .circuito li:first-child { border-top: 0; }
+
+  /* ---------- Editor ---------- */
+  .check { display: flex; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 16px; }
+  .check input { width: 20px; height: 20px; margin: 0; }
+  .fila { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; margin-bottom: 10px; align-items: start; }
+  .fila input { margin: 0; }
+  .fila .dos { display: grid; gap: 6px; }
+  .ctrl { display: flex; gap: 4px; }
+  .ctrl button { width: 34px; height: 34px; border: 2px solid var(--line); background: var(--card); border-radius: 6px; padding: 0; line-height: 1; }
+  .ctrl button:hover { background: var(--rest); }
+  .ctrl button.x { color: var(--err); }
+  .circ-ed { border: 2px solid var(--accent); border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+  .circ-ed .fila.sub { margin-left: 10px; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 18px; }
+  .guardar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+  .editor-h { font-weight: 700; margin: 0 0 8px; }
+
+  /* ---------- Diálogos y aviso ---------- */
+  dialog { border: 2px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); padding: 22px; width: calc(100% - 32px); max-width: 460px; }
+  dialog::backdrop { background: rgba(0, 0, 0, .5); }
+  dialog h2 { font-size: 1.7rem; margin-bottom: 14px; }
+  dialog .nota { color: var(--muted); font-size: .92rem; margin: -6px 0 16px; }
+  dialog .botones { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  #aviso {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    background: var(--ink); color: var(--chalk); padding: 12px 18px; border-radius: 8px;
+    max-width: calc(100% - 32px); font-weight: 600; z-index: 50;
+  }
+  #aviso.err { background: var(--err); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<section id="login">
+  <form class="login-box" id="loginForm" autocomplete="off">
+    <h1><span>Mi entrenamiento</span></h1>
+    <p class="sub">Elige cómo quieres entrar.</p>
+    <div class="tabs">
+      <button type="button" id="tabCliente" aria-pressed="true">Soy cliente</button>
+      <button type="button" id="tabAdmin" aria-pressed="false">Soy entrenador</button>
+    </div>
+    <div id="campoUsuario">
+      <label for="usuario">Nombre</label>
+      <input id="usuario" autocapitalize="none">
+    </div>
+    <label for="clave" id="labelClave">Contraseña</label>
+    <input id="clave" type="password" required>
+    <p class="error" id="error" role="alert"></p>
+    <button class="btn full" type="submit">Entrar</button>
+  </form>
+</section>
+
+<!-- ===== APP ===== -->
+<div id="shell" hidden>
+  <header class="top">
+    <button class="btn ghost" id="btnAtras" type="button" hidden>‹ Clientes</button>
+    <h1 id="titulo"></h1>
+    <button class="btn" id="btnPublicar" type="button" hidden disabled>Publicar cambios</button>
+    <button class="btn ghost" id="btnAjustes" type="button" hidden>Ajustes</button>
+    <button class="btn ghost" id="btnSalir" type="button">Salir</button>
+  </header>
+
+  <!-- Lista de clientes (entrenador) -->
+  <main class="vista" id="vistaClientes" hidden>
+    <div class="lista-head">
+      <p id="contador"></p>
+      <button class="btn" id="btnNuevo" type="button">Nuevo cliente</button>
+    </div>
+    <div class="clientes" id="listaClientes"></div>
+  </main>
+
+  <!-- Calendario + panel -->
+  <main class="vista" id="vistaCal" hidden>
+    <div class="cols">
+      <section aria-label="Calendario">
+        <div class="cal-head">
+          <h2 id="mesTitulo"></h2>
+          <div class="nav">
+            <button type="button" id="prev" aria-label="Mes anterior">‹</button>
+            <button type="button" id="hoy" class="hoy">Hoy</button>
+            <button type="button" id="next" aria-label="Mes siguiente">›</button>
+          </div>
+        </div>
+        <div class="grid" id="cal"></div>
+      </section>
+      <aside class="panel" id="panel"></aside>
+    </div>
+  </main>
+</div>
+
+<!-- Diálogo: cliente -->
+<dialog id="dlgCliente">
+  <h2 id="dlgClienteTitulo">Nuevo cliente</h2>
+  <label for="cNombre">Nombre que verá en pantalla</label>
+  <input id="cNombre">
+  <label for="cUsuario">Usuario para entrar</label>
+  <input id="cUsuario" autocapitalize="none">
+  <label for="cClave">Contraseña</label>
+  <input id="cClave">
+  <p class="error" id="cError" role="alert"></p>
+  <div class="botones">
+    <button class="btn danger" id="cEliminar" type="button">Eliminar</button>
+    <button class="btn ghost" id="cCancelar" type="button">Cancelar</button>
+    <button class="btn" id="cGuardar" type="button">Guardar</button>
+  </div>
+</dialog>
+
+<!-- Diálogo: ajustes -->
+<dialog id="dlgAjustes">
+  <h2>Ajustes</h2>
+  <p class="nota">Para publicar los cambios desde aquí, esta web necesita tu token de GitHub. Se guarda solo en este navegador.</p>
+  <label for="gToken">Token de GitHub</label>
+  <input id="gToken" type="password" autocomplete="off" placeholder="github_pat_...">
+  <label for="gOwner">Usuario de GitHub</label>
+  <input id="gOwner" autocapitalize="none">
+  <label for="gRepo">Repositorio</label>
+  <input id="gRepo" autocapitalize="none">
+  <label for="gBranch">Rama</label>
+  <input id="gBranch" autocapitalize="none">
+  <label for="gPath">Ruta del archivo de datos</label>
+  <input id="gPath" autocapitalize="none">
+  <label for="gAdmin">Contraseña de entrenador</label>
+  <input id="gAdmin">
+  <div class="botones">
+    <button class="btn ghost" id="gCopiar" type="button">Copiar datos.js</button>
+    <button class="btn ghost" id="gCerrar" type="button">Cerrar</button>
+    <button class="btn" id="gGuardar" type="button">Guardar ajustes</button>
+  </div>
+</dialog>
+
+<div id="aviso" role="status" hidden></div>
+
+<script src="datos.js"></script>
+<script>
+(function () {
+  var DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+  var DIAS_TXT = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+  var CORTOS = ["L", "M", "X", "J", "V", "S", "D"];
+
+  var tipoLogin = "cliente";
+  var modo = null;            // "cliente" | "admin"
+  var cliente = null;
+  var vista = new Date();
+  var seleccionado = null;
+  var borrador = null;        // copia editable del día seleccionado (admin)
+  var ambito = "dia";         // "dia" | "semana"
+  var enfocar = null;
+  var sucio = false;
+  var avisoTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
+  var clave = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  var hay = function (o, k) { return !!o && Object.prototype.hasOwnProperty.call(o, k); };
+  var clonar = function (o) { return o ? JSON.parse(JSON.stringify(o)) : o; };
+  var idxSemana = function (d) { return (d.getDay() + 6) % 7; };
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function aviso(msg, error) {
+    var a = $("aviso");
+    a.textContent = msg;
+    a.className = error ? "err" : "";
+    a.hidden = false;
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(function () { a.hidden = true; }, error ? 9000 : 5000);
+  }
+
+  /* ================= Datos ================= */
+  function entrenoDe(d) {
+    var k = clave(d);
+    if (hay(cliente.dias, k)) return cliente.dias[k];
+    return (cliente.semanal && cliente.semanal[DIAS[idxSemana(d)]]) || null;
+  }
+  function hayRutinaSemanal(d) {
+    return !!(cliente.semanal && cliente.semanal[DIAS[idxSemana(d)]]);
+  }
+  function origenDe(d) {
+    var k = clave(d);
+    if (hay(cliente.dias, k)) return cliente.dias[k] ? "dia" : null;
+    return hayRutinaSemanal(d) ? "semana" : null;
+  }
+  function serializar() {
+    return "var DATOS = " + JSON.stringify(DATOS, null, 2) + ";\n";
+  }
+  function parsear(txt) {
+    var a = txt.indexOf("{"), b = txt.lastIndexOf("}");
+    return JSON.parse(txt.slice(a, b + 1));
+  }
+  function marcarSucio() {
+    sucio = true;
+    var b = $("btnPublicar");
+    b.disabled = false;
+    b.textContent = "Publicar cambios";
+  }
+  window.addEventListener("beforeunload", function (e) {
+    if (sucio) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  /* ================= Login ================= */
+  function elegirTipo(t) {
+    tipoLogin = t;
+    $("tabCliente").setAttribute("aria-pressed", t === "cliente");
+    $("tabAdmin").setAttribute("aria-pressed", t === "admin");
+    $("campoUsuario").hidden = (t === "admin");
+    $("labelClave").textContent = t === "admin" ? "Contraseña de entrenador" : "Contraseña";
+    $("error").textContent = "";
+  }
+  $("tabCliente").addEventListener("click", function () { elegirTipo("cliente"); });
+  $("tabAdmin").addEventListener("click", function () { elegirTipo("admin"); });
+
+  $("loginForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var p = $("clave").value;
+    if (tipoLogin === "admin") {
+      if (DATOS.admin && DATOS.admin.clave === p) {
+        try { sessionStorage.setItem("sesion", "#admin"); } catch (e) {}
+        entrarAdmin();
+      } else {
+        $("error").textContent = "Contraseña de entrenador incorrecta.";
+      }
+      return;
+    }
+    var u = $("usuario").value.trim().toLowerCase();
+    var c = null;
+    for (var i = 0; i < DATOS.clientes.length; i++) {
+      if (DATOS.clientes[i].usuario.toLowerCase() === u && DATOS.clientes[i].clave === p) { c = DATOS.clientes[i]; break; }
+    }
+    if (!c) {
+      $("error").textContent = "Nombre o contraseña incorrectos. Revisa que estén bien escritos.";
+      return;
+    }
+    try { sessionStorage.setItem("sesion", c.usuario); } catch (e) {}
+    entrarCliente(c);
+  });
+
+  $("btnSalir").addEventListener("click", function () {
+    if (sucio && !confirm("Tienes cambios sin publicar. Si sales, se perderán. ¿Salir igualmente?")) return;
+    sucio = false;
+    try { sessionStorage.removeItem("sesion"); } catch (e) {}
+    modo = null; cliente = null; borrador = null;
+    $("shell").hidden = true;
+    $("login").hidden = false;
+    $("clave").value = "";
+    $("error").textContent = "";
+    $("btnPublicar").hidden = true;
+    $("btnAjustes").hidden = true;
+  });
+
+  function mostrarVista(v) {
+    $("vistaClientes").hidden = (v !== "clientes");
+    $("vistaCal").hidden = (v !== "cal");
+    $("btnAtras").hidden = !(modo === "admin" && v === "cal");
+    if (modo === "admin") $("titulo").textContent = v === "cal" ? cliente.nombre : "Mis clientes";
+    else $("titulo").textContent = "Hola, " + cliente.nombre;
+  }
+
+  function entrarCliente(c) {
+    modo = "cliente";
+    cliente = c;
+    $("login").hidden = true;
+    $("shell").hidden = false;
+    $("btnPublicar").hidden = true;
+    $("btnAjustes").hidden = true;
+    abrirCalendario();
+  }
+
+  function entrarAdmin() {
+    modo = "admin";
+    cliente = null;
+    $("login").hidden = true;
+    $("shell").hidden = false;
+    $("btnPublicar").hidden = false;
+    $("btnAjustes").hidden = false;
+    $("btnPublicar").disabled = !sucio;
+    mostrarVista("clientes");
+    pintarClientes();
+    cargarUltima();
+  }
+
+  /* ================= Lista de clientes (admin) ================= */
+  function pintarClientes() {
+    var cont = $("listaClientes");
+    cont.textContent = "";
+    var n = DATOS.clientes.length;
+    $("contador").textContent = n === 0 ? "Aún no tienes clientes." : n + (n === 1 ? " cliente" : " clientes");
+    DATOS.clientes.forEach(function (c) {
+      var card = el("div", "cli");
+      var main = el("button", "main");
+      main.type = "button";
+      main.appendChild(el("span", "nom", c.nombre));
+      main.appendChild(el("span", "usr", "Usuario: " + c.usuario));
+      main.addEventListener("click", function () { cliente = c; abrirCalendario(); });
+      var ed = el("button", "ed", "Editar");
+      ed.type = "button";
+      ed.setAttribute("aria-label", "Editar a " + c.nombre);
+      ed.addEventListener("click", function () { abrirDialogoCliente(c); });
+      card.appendChild(main);
+      card.appendChild(ed);
+      cont.appendChild(card);
+    });
+  }
+
+  $("btnAtras").addEventListener("click", function () {
+    cliente = null; borrador = null;
+    mostrarVista("clientes");
+    pintarClientes();
+  });
+  $("btnNuevo").addEventListener("click", function () { abrirDialogoCliente(null); });
+
+  /* ---------- Diálogo cliente ---------- */
+  var editando = null;
+  function abrirDialogoCliente(c) {
+    editando = c;
+    $("dlgClienteTitulo").textContent = c ? "Editar cliente" : "Nuevo cliente";
+    $("cNombre").value = c ? c.nombre : "";
+    $("cUsuario").value = c ? c.usuario : "";
+    $("cClave").value = c ? c.clave : "";
+    $("cError").textContent = "";
+    $("cEliminar").hidden = !c;
+    $("dlgCliente").showModal();
+    $("cNombre").focus();
+  }
+  $("cCancelar").addEventListener("click", function () { $("dlgCliente").close(); });
+  $("cGuardar").addEventListener("click", function () {
+    var nombre = $("cNombre").value.trim();
+    var usuario = $("cUsuario").value.trim();
+    var pass = $("cClave").value.trim();
+    if (!nombre || !usuario || !pass) { $("cError").textContent = "Rellena nombre, usuario y contraseña."; return; }
+    var repetido = DATOS.clientes.some(function (x) { return x !== editando && x.usuario.toLowerCase() === usuario.toLowerCase(); });
+    if (repetido) { $("cError").textContent = "Ya existe otro cliente con ese usuario."; return; }
+    if (editando) {
+      editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass;
+    } else {
+      DATOS.clientes.push({ usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {} });
+    }
+    marcarSucio();
+    $("dlgCliente").close();
+    pintarClientes();
+  });
+  $("cEliminar").addEventListener("click", function () {
+    if (!editando) return;
+    if (!confirm("¿Eliminar a " + editando.nombre + " y todos sus entrenamientos?")) return;
+    DATOS.clientes.splice(DATOS.clientes.indexOf(editando), 1);
+    marcarSucio();
+    $("dlgCliente").close();
+    pintarClientes();
+  });
+
+  /* ================= Calendario ================= */
+  function abrirCalendario() {
+    var h = new Date();
+    vista = new Date(h.getFullYear(), h.getMonth(), 1);
+    mostrarVista("cal");
+    seleccionar(new Date(h.getFullYear(), h.getMonth(), h.getDate()));
+  }
+
+  function seleccionar(f) {
+    seleccionado = f;
+    if (modo === "admin") {
+      var e = entrenoDe(f);
+      borrador = e ? clonar(e) : { titulo: "", notas: "", descanso: false, ejercicios: [] };
+      borrador.descanso = !!borrador.descanso;
+      borrador.ejercicios = borrador.ejercicios || [];
+      ambito = origenDe(f) === "semana" ? "semana" : "dia";
+    }
+    pintarCalendario();
+    pintarPanel();
+  }
+
+  function pintarCalendario() {
+    var cal = $("cal");
+    cal.textContent = "";
+    $("mesTitulo").textContent = vista.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    CORTOS.forEach(function (d) { cal.appendChild(el("div", "dow", d)); });
+
+    var primero = idxSemana(vista);
+    for (var i = 0; i < primero; i++) cal.appendChild(el("div", "day empty"));
+
+    var ultimo = new Date(vista.getFullYear(), vista.getMonth() + 1, 0).getDate();
+    var hoyK = clave(new Date());
+    var selK = seleccionado ? clave(seleccionado) : "";
+
+    for (var n = 1; n <= ultimo; n++) {
+      var fecha = new Date(vista.getFullYear(), vista.getMonth(), n);
+      var e = entrenoDe(fecha);
+      var cls = "day";
+      if (e && e.descanso) cls += " rest";
+      if (clave(fecha) === hoyK) cls += " today";
+      if (clave(fecha) === selK) cls += " sel";
+      var b = el("button", cls);
+      b.type = "button";
+      b.setAttribute("aria-label",
+        fecha.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) +
+        (e ? ": " + e.titulo : ": sin entrenamiento"));
+      b.appendChild(el("span", "n", String(n)));
+      if (e) b.appendChild(el("span", "t", e.titulo));
+      b.addEventListener("click", (function (f) { return function () { seleccionar(f); }; })(fecha));
+      cal.appendChild(b);
+    }
+  }
+
+  function moverMes(delta) {
+    vista = new Date(vista.getFullYear(), vista.getMonth() + delta, 1);
+    pintarCalendario();
+  }
+  $("prev").addEventListener("click", function () { moverMes(-1); });
+  $("next").addEventListener("click", function () { moverMes(1); });
+  $("hoy").addEventListener("click", function () {
+    var h = new Date();
+    vista = new Date(h.getFullYear(), h.getMonth(), 1);
+    seleccionar(new Date(h.getFullYear(), h.getMonth(), h.getDate()));
+  });
+
+  /* ================= Panel ================= */
+  function pintarPanel() {
+    if (modo === "admin") pintarEditor(); else pintarVistaCliente();
+  }
+
+  function pintarVistaCliente() {
+    var p = $("panel");
+    p.textContent = "";
+    p.appendChild(el("p", "fecha", seleccionado.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
+    var e = entrenoDe(seleccionado);
+    if (!e) {
+      p.appendChild(el("h3", null, "Sin entrenamiento"));
+      p.appendChild(el("p", "vacio", "No tienes nada asignado este día."));
+      return;
+    }
+    p.appendChild(el("h3", null, e.titulo));
+    if (e.notas) p.appendChild(el("p", "notas", e.notas));
+    if (e.descanso && !(e.ejercicios && e.ejercicios.length)) {
+      p.appendChild(el("p", "vacio", "Hoy toca recuperar. Descansa bien y bebe agua."));
+      return;
+    }
+    var ul = el("ul", "ejercicios");
+    (e.ejercicios || []).forEach(function (x) {
+      var li = el("li");
+      if (x.tipo === "circuito") {
+        var box = el("div", "circuito");
+        box.appendChild(el("span", "cab", x.nombre || "Circuito"));
+        if (x.detalle) box.appendChild(el("span", "info", x.detalle));
+        var sub = el("ul");
+        (x.ejercicios || []).forEach(function (y) {
+          var l2 = el("li");
+          l2.appendChild(el("span", "nom", y.nombre));
+          if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
+          sub.appendChild(l2);
+        });
+        box.appendChild(sub);
+        li.appendChild(box);
+      } else {
+        li.appendChild(el("span", "nom", x.nombre));
+        if (x.detalle) li.appendChild(el("span", "det", x.detalle));
+      }
+      ul.appendChild(li);
+    });
+    p.appendChild(ul);
+  }
+
+  /* ---------- Editor (admin) ---------- */
+  function mover(arr, i, d) {
+    var j = i + d;
+    if (j < 0 || j >= arr.length) return;
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    pintarEditor();
+  }
+  function controles(arr, i) {
+    var c = el("div", "ctrl");
+    var up = el("button", null, "↑"); up.type = "button"; up.setAttribute("aria-label", "Subir");
+    var dn = el("button", null, "↓"); dn.type = "button"; dn.setAttribute("aria-label", "Bajar");
+    var x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Quitar");
+    up.addEventListener("click", function () { mover(arr, i, -1); });
+    dn.addEventListener("click", function () { mover(arr, i, 1); });
+    x.addEventListener("click", function () { arr.splice(i, 1); pintarEditor(); });
+    c.appendChild(up); c.appendChild(dn); c.appendChild(x);
+    return c;
+  }
+  function campo(obj, prop, placeholder, key) {
+    var inp = el("input");
+    inp.value = obj[prop] || "";
+    inp.placeholder = placeholder;
+    if (key) inp.setAttribute("data-key", key);
+    inp.addEventListener("input", function () { obj[prop] = inp.value; });
+    return inp;
+  }
+  function filaEjercicio(arr, i, key, sub) {
+    var it = arr[i];
+    var f = el("div", "fila" + (sub ? " sub" : ""));
+    var dos = el("div", "dos");
+    dos.appendChild(campo(it, "nombre", "Ejercicio", key));
+    dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
+    f.appendChild(dos);
+    f.appendChild(controles(arr, i));
+    return f;
+  }
+  function bloqueCircuito(arr, i) {
+    var it = arr[i];
+    var box = el("div", "circ-ed");
+    var cab = el("div", "fila");
+    var dos = el("div", "dos");
+    dos.appendChild(campo(it, "nombre", "Nombre del circuito", "c" + i));
+    dos.appendChild(campo(it, "detalle", "Ej. 3 rondas · 1 min"));
+    cab.appendChild(dos);
+    cab.appendChild(controles(arr, i));
+    box.appendChild(cab);
+    it.ejercicios = it.ejercicios || [];
+    it.ejercicios.forEach(function (_, j) { box.appendChild(filaEjercicio(it.ejercicios, j, i + "." + j, true)); });
+    var add = el("button", "btn ghost", "+ Ejercicio en el circuito");
+    add.type = "button";
+    add.addEventListener("click", function () {
+      it.ejercicios.push({ nombre: "", detalle: "" });
+      enfocar = i + "." + (it.ejercicios.length - 1);
+      pintarEditor();
+    });
+    box.appendChild(add);
+    return box;
+  }
+
+  function pintarEditor() {
+    var p = $("panel");
+    p.textContent = "";
+    var f = seleccionado;
+    p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
+
+    var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
+    var ti = campo(borrador, "titulo", "Ej. Pierna, Empuje, Cardio"); ti.id = "eTitulo";
+    p.appendChild(lt); p.appendChild(ti);
+
+    var chk = el("label", "check");
+    var cb = el("input"); cb.type = "checkbox"; cb.checked = borrador.descanso;
+    cb.addEventListener("change", function () { borrador.descanso = cb.checked; pintarEditor(); });
+    chk.appendChild(cb); chk.appendChild(document.createTextNode("Día de descanso"));
+    p.appendChild(chk);
+
+    var ln = el("label", null, "Notas (opcional)"); ln.setAttribute("for", "eNotas");
+    var ta = el("textarea"); ta.id = "eNotas"; ta.value = borrador.notas || "";
+    ta.placeholder = "Ej. Calentar 10 min antes de empezar.";
+    ta.addEventListener("input", function () { borrador.notas = ta.value; });
+    p.appendChild(ln); p.appendChild(ta);
+
+    if (!borrador.descanso) {
+      p.appendChild(el("p", "editor-h", "Ejercicios"));
+      borrador.ejercicios.forEach(function (it, i) {
+        p.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
+      });
+      var ac = el("div", "acciones");
+      var b1 = el("button", "btn ghost", "+ Añadir ejercicio"); b1.type = "button";
+      b1.addEventListener("click", function () {
+        borrador.ejercicios.push({ nombre: "", detalle: "" });
+        enfocar = String(borrador.ejercicios.length - 1);
+        pintarEditor();
+      });
+      var b2 = el("button", "btn ghost", "+ Añadir circuito"); b2.type = "button";
+      b2.addEventListener("click", function () {
+        borrador.ejercicios.push({
+          tipo: "circuito", nombre: "Circuito", detalle: "",
+          ejercicios: [{ nombre: "", detalle: "" }, { nombre: "", detalle: "" }]
+        });
+        enfocar = (borrador.ejercicios.length - 1) + ".0";
+        pintarEditor();
+      });
+      ac.appendChild(b1); ac.appendChild(b2);
+      p.appendChild(ac);
+    }
+
+    p.appendChild(el("hr", "sep"));
+
+    var la = el("label", null, "Aplicar a"); la.setAttribute("for", "eAmbito");
+    var sel = el("select"); sel.id = "eAmbito";
+    var o1 = el("option", null, "Solo este día"); o1.value = "dia";
+    var o2 = el("option", null, "Todos los " + DIAS_TXT[idxSemana(f)] + " (se repite cada semana)"); o2.value = "semana";
+    sel.appendChild(o1); sel.appendChild(o2);
+    sel.value = ambito;
+    sel.addEventListener("change", function () { ambito = sel.value; });
+    p.appendChild(la); p.appendChild(sel);
+
+    var g = el("div", "guardar");
+    var bg = el("button", "btn", "Guardar día"); bg.type = "button";
+    bg.addEventListener("click", guardarDia);
+    g.appendChild(bg);
+    if (entrenoDe(f)) {
+      var bq = el("button", "btn danger", "Quitar este día"); bq.type = "button";
+      bq.addEventListener("click", quitarDia);
+      g.appendChild(bq);
+    }
+    if (hayRutinaSemanal(f)) {
+      var bs = el("button", "btn danger", "Quitar de todos los " + DIAS_TXT[idxSemana(f)]); bs.type = "button";
+      bs.addEventListener("click", quitarSemana);
+      g.appendChild(bs);
+    }
+    p.appendChild(g);
+
+    if (enfocar !== null) {
+      var q = p.querySelector('[data-key="' + enfocar + '"]');
+      enfocar = null;
+      if (q) q.focus();
+    }
+  }
+
+  function limpiar(b) {
+    var res = { titulo: (b.titulo || "").trim(), ejercicios: [] };
+    var notas = (b.notas || "").trim();
+    if (notas) res.notas = notas;
+    if (b.descanso) {
+      res.descanso = true;
+      if (!res.titulo) res.titulo = "Descanso";
+      return res;
+    }
+    (b.ejercicios || []).forEach(function (it) {
+      if (it.tipo === "circuito") {
+        var inner = (it.ejercicios || [])
+          .filter(function (y) { return (y.nombre || "").trim(); })
+          .map(function (y) { return { nombre: y.nombre.trim(), detalle: (y.detalle || "").trim() }; });
+        if (inner.length) res.ejercicios.push({
+          tipo: "circuito", nombre: (it.nombre || "").trim() || "Circuito",
+          detalle: (it.detalle || "").trim(), ejercicios: inner
+        });
+      } else if ((it.nombre || "").trim()) {
+        res.ejercicios.push({ nombre: it.nombre.trim(), detalle: (it.detalle || "").trim() });
+      }
+    });
+    if (!res.ejercicios.length) return null;
+    if (!res.titulo) res.titulo = "Entrenamiento";
+    return res;
+  }
+
+  function guardarDia() {
+    var limpio = limpiar(borrador);
+    if (!limpio) { aviso("Añade al menos un ejercicio, o marca el día como descanso.", true); return; }
+    var k = clave(seleccionado), nd = DIAS[idxSemana(seleccionado)];
+    cliente.semanal = cliente.semanal || {};
+    cliente.dias = cliente.dias || {};
+    if (ambito === "semana") {
+      cliente.semanal[nd] = limpio;
+      delete cliente.dias[k];
+    } else {
+      cliente.dias[k] = limpio;
+    }
+    marcarSucio();
+    seleccionar(seleccionado);
+    aviso("Día guardado. Pulsa «Publicar cambios» para que tu cliente lo vea.");
+  }
+
+  function quitarDia() {
+    var k = clave(seleccionado);
+    cliente.dias = cliente.dias || {};
+    if (hayRutinaSemanal(seleccionado)) cliente.dias[k] = null; else delete cliente.dias[k];
+    marcarSucio();
+    seleccionar(seleccionado);
+  }
+  function quitarSemana() {
+    var nd = DIAS[idxSemana(seleccionado)];
+    if (!confirm("Esto quita el entrenamiento de TODOS los " + DIAS_TXT[idxSemana(seleccionado)] + ". ¿Seguro?")) return;
+    delete cliente.semanal[nd];
+    marcarSucio();
+    seleccionar(seleccionado);
+  }
+
+  /* ================= GitHub ================= */
+  function ajustesPorDefecto() {
+    var o = "", r = "", host = location.hostname;
+    if (/\.github\.io$/.test(host)) {
+      o = host.split(".")[0];
+      r = location.pathname.split("/")[1] || (o + ".github.io");
+      if (/\.html?$/.test(r)) r = o + ".github.io";
+    }
+    return { token: "", owner: o, repo: r, branch: "main", path: "datos.js" };
+  }
+  function cargarAjustes() {
+    var base = ajustesPorDefecto();
+    try {
+      var g = JSON.parse(localStorage.getItem("gh") || "null");
+      if (g) for (var k in g) if (g[k]) base[k] = g[k];
+    } catch (e) {}
+    return base;
+  }
+  function urlContenido(g) {
+    return "https://api.github.com/repos/" + encodeURIComponent(g.owner) + "/" + encodeURIComponent(g.repo) +
+      "/contents/" + g.path.split("/").map(encodeURIComponent).join("/");
+  }
+  function mensajeError(status) {
+    if (status === 401) return "GitHub no acepta el token. Puede haber caducado o estar mal copiado.";
+    if (status === 403) return "El token no tiene permiso de escritura. Debe tener «Contents: Read and write».";
+    if (status === 404) return "No encuentro el archivo en GitHub. Revisa usuario, repositorio, rama y ruta en Ajustes, y que el token tenga acceso a ese repositorio.";
+    if (status === 409 || status === 422) return "GitHub detectó un conflicto. Vuelve a pulsar «Publicar cambios».";
+    return "GitHub respondió con el error " + status + ".";
+  }
+
+  function cargarUltima() {
+    var g = cargarAjustes();
+    if (!g.token || !g.owner || !g.repo) return;
+    fetch(urlContenido(g) + "?ref=" + encodeURIComponent(g.branch) + "&t=" + Date.now(), {
+      headers: { Authorization: "Bearer " + g.token, Accept: "application/vnd.github.raw+json" }
+    }).then(function (r) {
+      if (!r.ok) throw new Error(mensajeError(r.status));
+      return r.text();
+    }).then(function (txt) {
+      if (sucio) return;
+      var nuevo = parsear(txt);
+      if (nuevo && nuevo.clientes) { DATOS = nuevo; if (modo === "admin" && !cliente) pintarClientes(); }
+    }).catch(function (e) {
+      aviso("No pude cargar la última versión de GitHub: " + e.message, true);
+    });
+  }
+
+  function publicar() {
+    var g = cargarAjustes();
+    if (!g.token || !g.owner || !g.repo) {
+      abrirAjustes();
+      aviso("Primero completa tu usuario, repositorio y token de GitHub.", true);
+      return;
+    }
+    var btn = $("btnPublicar");
+    btn.disabled = true; btn.textContent = "Publicando…";
+    var url = urlContenido(g);
+    var h = { Authorization: "Bearer " + g.token, Accept: "application/vnd.github+json" };
+    fetch(url + "?ref=" + encodeURIComponent(g.branch) + "&t=" + Date.now(), { headers: h })
+      .then(function (r) {
+        if (!r.ok) throw new Error(mensajeError(r.status));
+        return r.json();
+      })
+      .then(function (j) {
+        var contenido = btoa(unescape(encodeURIComponent(serializar())));
+        return fetch(url, {
+          method: "PUT",
+          headers: Object.assign({ "Content-Type": "application/json" }, h),
+          body: JSON.stringify({ message: "Actualizar entrenamientos", content: contenido, sha: j.sha, branch: g.branch })
+        });
+      })
+      .then(function (r) {
+        if (!r.ok) throw new Error(mensajeError(r.status));
+        sucio = false;
+        btn.textContent = "Publicado";
+        btn.disabled = true;
+        aviso("Publicado. Los clientes lo verán en uno o dos minutos.");
+      })
+      .catch(function (e) {
+        btn.disabled = false; btn.textContent = "Publicar cambios";
+        aviso(e.message, true);
+      });
+  }
+  $("btnPublicar").addEventListener("click", publicar);
+
+  /* ---------- Ajustes ---------- */
+  function abrirAjustes() {
+    var g = cargarAjustes();
+    $("gToken").value = g.token;
+    $("gOwner").value = g.owner;
+    $("gRepo").value = g.repo;
+    $("gBranch").value = g.branch;
+    $("gPath").value = g.path;
+    $("gAdmin").value = (DATOS.admin && DATOS.admin.clave) || "";
+    if (!$("dlgAjustes").open) $("dlgAjustes").showModal();
+  }
+  $("btnAjustes").addEventListener("click", abrirAjustes);
+  $("gCerrar").addEventListener("click", function () { $("dlgAjustes").close(); });
+  $("gGuardar").addEventListener("click", function () {
+    var g = {
+      token: $("gToken").value.trim(), owner: $("gOwner").value.trim(), repo: $("gRepo").value.trim(),
+      branch: $("gBranch").value.trim() || "main", path: $("gPath").value.trim() || "datos.js"
+    };
+    try { localStorage.setItem("gh", JSON.stringify(g)); } catch (e) {}
+    var nueva = $("gAdmin").value.trim();
+    if (nueva && DATOS.admin && nueva !== DATOS.admin.clave) { DATOS.admin.clave = nueva; marcarSucio(); }
+    $("dlgAjustes").close();
+    aviso("Ajustes guardados.");
+  });
+  $("gCopiar").addEventListener("click", function () {
+    var txt = serializar();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(
+        function () { aviso("Copiado. Pégalo en datos.js dentro de GitHub."); },
+        function () { aviso("No pude copiar al portapapeles.", true); }
+      );
+    } else {
+      aviso("Tu navegador no permite copiar desde aquí.", true);
+    }
+  });
+
+  /* ================= Recordar sesión de la pestaña ================= */
+  try {
+    var guardado = sessionStorage.getItem("sesion");
+    if (guardado === "#admin") {
+      entrarAdmin();
+    } else if (guardado) {
+      for (var i = 0; i < DATOS.clientes.length; i++) {
+        if (DATOS.clientes[i].usuario === guardado) { entrarCliente(DATOS.clientes[i]); break; }
+      }
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
