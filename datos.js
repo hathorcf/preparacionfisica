@@ -10,5 +10,9 @@ var DATOS = {
       "semanal": {},
       "dias": {}
     }
-  ]
+  ],
+  "firebase": {
+    "projectId": "entrenamietos-404a1",
+    "apiKey": "AIzaSyBRAMR4TLKJqAcmDSexehpg2wj1LDxM-Xc"
+  }
 };
