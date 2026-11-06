@@ -4,6 +4,7 @@ var DATOS = {
   },
   "clientes": [
     {
+      "id": "mw51iulx2cir",
       "usuario": "ismaelnd",
       "clave": "ismael123",
       "nombre": "Ismael",
