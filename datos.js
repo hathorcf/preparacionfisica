@@ -144,6 +144,71 @@ var DATOS = {
           "titulo": "Descanso",
           "ejercicios": [],
           "descanso": true
+        },
+        "2026-11-12": {
+          "titulo": "Miembro inferior",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hip thrust con barra y pausa abajo",
+                  "detalle": "x4",
+                  "video": "https://www.youtube.com/shorts/9xJHFG11Sj8?feature=share"
+                },
+                {
+                  "nombre": "Sprint máximo airbike",
+                  "detalle": "[x15s + 15s descanso] x3"
+                },
+                {
+                  "nombre": "Hang power clean",
+                  "detalle": "x4",
+                  "video": "https://www.youtube.com/shorts/7KMYH9gyeEM?feature=share"
+                },
+                {
+                  "nombre": "Russian twist",
+                  "detalle": "x10/lado"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Front squat con pausa",
+                  "detalle": "x4"
+                },
+                {
+                  "nombre": "Saltos verticales asistidos con goma",
+                  "detalle": "x6",
+                  "video": "https://www.youtube.com/shorts/Y4iU5j2VQBE?feature=share"
+                },
+                {
+                  "nombre": "Goblet pistol squat",
+                  "detalle": "x6/lado",
+                  "video": "https://www.youtube.com/shorts/zWCs8-f-3Ks?feature=share"
+                },
+                {
+                  "nombre": "Plancha moviendo kettlebell",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/odo0h50hfwY?feature=share"
+                }
+              ]
+            },
+            {
+              "nombre": "Máquina de cuádriceps unilateral isométrica",
+              "detalle": "x30s/lado",
+              "video": "https://www.youtube.com/shorts/HQwNFQENCLA?feature=share"
+            },
+            {
+              "nombre": "Intervalos máximos airbike",
+              "detalle": "[10s+10s descanso] x8"
+            }
+          ]
         }
       }
     }
