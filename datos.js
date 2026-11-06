@@ -8,25 +8,7 @@ var DATOS = {
       "clave": "ismael123",
       "nombre": "Ismael",
       "semanal": {},
-      "dias": {
-        "2026-11-09": {
-          "titulo": "Miembro inferior",
-          "ejercicios": [
-            {
-              "nombre": "Sentadilla búlgara",
-              "detalle": "3x10"
-            },
-            {
-              "nombre": "Power clean",
-              "detalle": "3x10"
-            },
-            {
-              "nombre": "Máquina de cuádriceps isométrica",
-              "detalle": "3x10"
-            }
-          ]
-        }
-      }
+      "dias": {}
     }
   ],
   "firebase": {
