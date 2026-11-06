@@ -168,6 +168,19 @@
   .sep { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
   .editor-h { font-weight: 700; margin: 0 0 8px; }
 
+  /* ---------- Seguimiento del cliente ---------- */
+  .ejercicios > li.item { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+  .item input[type="checkbox"] { width: 24px; height: 24px; margin: 1px 0 0; accent-color: var(--accent); }
+  .item.hecho .nom { text-decoration: line-through; color: var(--muted); }
+  .rpe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 8px 0 4px; }
+  .rpe button { padding: 10px 0; border: 2px solid var(--line); background: var(--card); border-radius: 6px; font-weight: 700; }
+  .rpe button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .rpe button:disabled, .item input:disabled { opacity: .45; }
+  .obs-l { margin-top: 16px; }
+  .resultado { background: var(--rest); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
+  .resultado p { margin: 0 0 6px; }
+  .resultado .notas { background: var(--card); }
+
   /* ---------- Diálogos y aviso ---------- */
   dialog { border: 2px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); padding: 22px; width: calc(100% - 32px); max-width: 460px; }
   dialog::backdrop { background: rgba(0, 0, 0, .5); }
@@ -273,6 +286,10 @@
   <input id="gBranch" autocapitalize="none">
   <label for="gPath">Ruta del archivo de datos</label>
   <input id="gPath" autocapitalize="none">
+  <label for="gProyecto">Firebase: ID del proyecto</label>
+  <input id="gProyecto" autocapitalize="none">
+  <label for="gApiKey">Firebase: clave de API</label>
+  <input id="gApiKey" autocapitalize="none">
   <label for="gAdmin">Contraseña de entrenador</label>
   <input id="gAdmin">
   <div class="botones">
@@ -301,6 +318,9 @@
   var enfocar = null;
   var sucio = false;
   var avisoTimer = null;
+  var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo} }
+  var progCargado = false;
+  var progTimer = null;
 
   var $ = function (id) { return document.getElementById(id); };
   var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
@@ -326,6 +346,64 @@
   }
 
   /* ================= Datos ================= */
+  /* ---------- Progreso del cliente (Firebase, vía REST) ---------- */
+  function fbConf() {
+    return DATOS.firebase && DATOS.firebase.projectId && DATOS.firebase.apiKey ? DATOS.firebase : null;
+  }
+  function idProg(c) { return c.id || c.usuario.toLowerCase().replace(/[^a-z0-9_-]/g, "_"); }
+  function urlProg(c) {
+    return "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(DATOS.firebase.projectId) +
+      "/databases/(default)/documents/progreso/" + encodeURIComponent(idProg(c));
+  }
+  function setEstado(t) { var e = $("progEstado"); if (e) e.textContent = t; }
+  function cargarProgreso(c, cb) {
+    progreso = {}; progCargado = false;
+    if (!fbConf()) { cb(); return; }
+    fetch(urlProg(c) + "?key=" + encodeURIComponent(DATOS.firebase.apiKey))
+      .then(function (r) {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error("error " + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        if (j && j.fields && j.fields.datos) progreso = JSON.parse(j.fields.datos.stringValue) || {};
+        progCargado = true; cb();
+      })
+      .catch(function (e) { aviso("No pude cargar el progreso (" + e.message + ").", true); cb(); });
+  }
+  function guardarProgreso() {
+    if (!fbConf() || !progCargado || modo !== "cliente") return;
+    fetch(urlProg(cliente) + "?key=" + encodeURIComponent(DATOS.firebase.apiKey) + "&updateMask.fieldPaths=datos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fields: { datos: { stringValue: JSON.stringify(progreso) } } })
+    }).then(function (r) {
+      if (!r.ok) throw new Error("error " + r.status);
+      setEstado("Guardado ✓");
+    }).catch(function (e) {
+      setEstado("");
+      aviso("No se pudo guardar (" + e.message + "). Inténtalo de nuevo.", true);
+    });
+  }
+  function programarGuardado() {
+    setEstado("Guardando…");
+    clearTimeout(progTimer);
+    progTimer = setTimeout(guardarProgreso, 700);
+  }
+  function progDia(crear) {
+    var k = clave(seleccionado);
+    if (!progreso[k] && crear) progreso[k] = { hechos: {}, obs: "", esfuerzo: 0 };
+    return progreso[k];
+  }
+  function estadoDia(f, e) {
+    if (!e || e.descanso) return "";
+    var p = progreso[clave(f)];
+    var total = (e.ejercicios || []).length, h = 0;
+    if (!p || !p.hechos || !total) return "";
+    for (var i = 0; i < total; i++) if (p.hechos[i]) h++;
+    return !h ? "" : (h >= total ? "ok" : "parcial");
+  }
+
   function entrenoDe(d) {
     var k = clave(d);
     if (hay(cliente.dias, k)) return cliente.dias[k];
@@ -489,9 +567,11 @@
     var repetido = DATOS.clientes.some(function (x) { return x !== editando && x.usuario.toLowerCase() === usuario.toLowerCase(); });
     if (repetido) { $("cError").textContent = "Ya existe otro cliente con ese usuario."; return; }
     if (editando) {
+      if (!editando.id) editando.id = idProg(editando);
       editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass;
     } else {
-      DATOS.clientes.push({ usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {} });
+      DATOS.clientes.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {} });
     }
     marcarSucio();
     $("dlgCliente").close();
@@ -512,6 +592,12 @@
     vista = new Date(h.getFullYear(), h.getMonth(), 1);
     mostrarVista("cal");
     seleccionar(new Date(h.getFullYear(), h.getMonth(), h.getDate()));
+    var c = cliente;
+    cargarProgreso(c, function () {
+      if (cliente !== c) return;
+      pintarCalendario();
+      if (modo === "cliente") pintarVistaCliente(); else pintarResultado();
+    });
   }
 
   function seleccionar(f) {
@@ -552,7 +638,8 @@
       b.setAttribute("aria-label",
         fecha.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) +
         (e ? ": " + e.titulo : ": sin entrenamiento"));
-      b.appendChild(el("span", "n", String(n)));
+      var est = estadoDia(fecha, e);
+      b.appendChild(el("span", "n", String(n) + (est === "ok" ? " ✓" : est === "parcial" ? " ½" : "")));
       if (e) b.appendChild(el("span", "t", e.titulo));
       b.addEventListener("click", (function (f) { return function () { seleccionar(f); }; })(fecha));
       cal.appendChild(b);
@@ -592,9 +679,12 @@
       p.appendChild(el("p", "vacio", "Hoy toca recuperar. Descansa bien y bebe agua."));
       return;
     }
+    var usa = !!fbConf();
+    var pd = progDia(false);
     var ul = el("ul", "ejercicios");
-    (e.ejercicios || []).forEach(function (x) {
-      var li = el("li");
+    (e.ejercicios || []).forEach(function (x, i) {
+      var li = el("li", usa ? "item" : "");
+      var cuerpo = el("div");
       if (x.tipo === "circuito") {
         var box = el("div", "circuito");
         box.appendChild(el("span", "cab", x.nombre || "Circuito"));
@@ -607,14 +697,83 @@
           sub.appendChild(l2);
         });
         box.appendChild(sub);
-        li.appendChild(box);
+        cuerpo.appendChild(box);
       } else {
-        li.appendChild(el("span", "nom", x.nombre));
-        if (x.detalle) li.appendChild(el("span", "det", x.detalle));
+        cuerpo.appendChild(el("span", "nom", x.nombre));
+        if (x.detalle) cuerpo.appendChild(el("span", "det", x.detalle));
       }
+      if (usa) {
+        var cb = el("input"); cb.type = "checkbox";
+        cb.checked = !!(pd && pd.hechos && pd.hechos[i]);
+        cb.disabled = !progCargado;
+        cb.setAttribute("aria-label", "Marcar como hecho");
+        if (cb.checked) li.classList.add("hecho");
+        cb.addEventListener("change", function () {
+          var d = progDia(true);
+          if (cb.checked) d.hechos[i] = true; else delete d.hechos[i];
+          li.classList.toggle("hecho", cb.checked);
+          pintarCalendario();
+          programarGuardado();
+        });
+        li.appendChild(cb);
+      }
+      li.appendChild(cuerpo);
       ul.appendChild(li);
     });
     p.appendChild(ul);
+    if (usa) pintarSeguimiento(p, pd);
+  }
+
+  function pintarSeguimiento(p, pd) {
+    p.appendChild(el("hr", "sep"));
+    p.appendChild(el("p", "editor-h", "Esfuerzo percibido"));
+    p.appendChild(el("p", "vacio", "1 = muy fácil · 10 = esfuerzo máximo"));
+    var fila = el("div", "rpe");
+    var botones = [];
+    function marcar() {
+      var v = (progDia(false) || {}).esfuerzo || 0;
+      botones.forEach(function (b, i) { b.setAttribute("aria-pressed", String(v === i + 1)); });
+    }
+    for (var n = 1; n <= 10; n++) {
+      (function (n) {
+        var b = el("button", null, String(n));
+        b.type = "button"; b.disabled = !progCargado;
+        b.addEventListener("click", function () {
+          var d = progDia(true);
+          d.esfuerzo = d.esfuerzo === n ? 0 : n;
+          marcar(); programarGuardado();
+        });
+        botones.push(b); fila.appendChild(b);
+      })(n);
+    }
+    marcar();
+    p.appendChild(fila);
+    var lo = el("label", "obs-l", "Observaciones"); lo.setAttribute("for", "cObs");
+    var ta = el("textarea"); ta.id = "cObs"; ta.value = (pd && pd.obs) || ""; ta.disabled = !progCargado;
+    ta.placeholder = "Cómo te has sentido, pesos que has usado…";
+    ta.addEventListener("input", function () { progDia(true).obs = ta.value; programarGuardado(); });
+    p.appendChild(lo); p.appendChild(ta);
+    var st = el("p", "vacio"); st.id = "progEstado";
+    p.appendChild(st);
+  }
+
+  function pintarResultado() {
+    var c = $("resultado");
+    if (!c) return;
+    c.textContent = "";
+    if (!fbConf() || !seleccionado) return;
+    var p = progreso[clave(seleccionado)];
+    if (!p) return;
+    var e = entrenoDe(seleccionado);
+    var total = e && e.ejercicios ? e.ejercicios.length : 0, h = 0;
+    for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
+    if (!h && !p.esfuerzo && !(p.obs || "").trim()) return;
+    var box = el("div", "resultado");
+    box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente"));
+    if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
+    if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
+    if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
+    c.appendChild(box);
   }
 
   /* ---------- Editor (admin) ---------- */
@@ -681,6 +840,8 @@
     p.textContent = "";
     var f = seleccionado;
     p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
+
+    var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
     var ti = campo(borrador, "titulo", "Ej. Pierna, Empuje, Cardio"); ti.id = "eTitulo";
@@ -909,6 +1070,8 @@
     $("gRepo").value = g.repo;
     $("gBranch").value = g.branch;
     $("gPath").value = g.path;
+    $("gProyecto").value = (DATOS.firebase && DATOS.firebase.projectId) || "";
+    $("gApiKey").value = (DATOS.firebase && DATOS.firebase.apiKey) || "";
     $("gAdmin").value = (DATOS.admin && DATOS.admin.clave) || "";
     if (!$("dlgAjustes").open) $("dlgAjustes").showModal();
   }
@@ -920,6 +1083,12 @@
       branch: $("gBranch").value.trim() || "main", path: $("gPath").value.trim() || "datos.js"
     };
     try { localStorage.setItem("gh", JSON.stringify(g)); } catch (e) {}
+    var pid = $("gProyecto").value.trim(), key = $("gApiKey").value.trim();
+    var act = DATOS.firebase || {};
+    if (pid !== (act.projectId || "") || key !== (act.apiKey || "")) {
+      if (pid && key) DATOS.firebase = { projectId: pid, apiKey: key }; else delete DATOS.firebase;
+      marcarSucio();
+    }
     var nueva = $("gAdmin").value.trim();
     if (nueva && DATOS.admin && nueva !== DATOS.admin.clave) { DATOS.admin.clave = nueva; marcarSucio(); }
     $("dlgAjustes").close();
