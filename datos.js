@@ -15,6 +15,14 @@ var DATOS = {
             {
               "nombre": "Sentadilla búlgara",
               "detalle": "3x10"
+            },
+            {
+              "nombre": "Power clean",
+              "detalle": "3x10"
+            },
+            {
+              "nombre": "Máquina de cuádriceps isométrica",
+              "detalle": "3x10"
             }
           ]
         }
