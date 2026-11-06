@@ -109,7 +109,8 @@ var DATOS = {
                 },
                 {
                   "nombre": "Remo invertido balístico",
-                  "detalle": "x6"
+                  "detalle": "x6",
+                  "video": "https://www.youtube.com/shorts/2TvD67YT6To?feature=share"
                 },
                 {
                   "nombre": "Lanzamiento de balón medicinal lateral",
