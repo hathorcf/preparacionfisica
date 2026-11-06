@@ -63,6 +63,79 @@ var DATOS = {
                   "detalle": "x10"
                 }
               ]
+            },
+            {
+              "nombre": "Cinta de correr",
+              "detalle": "4 km a 5:30 mins/km"
+            }
+          ]
+        },
+        "2026-11-10": {
+          "titulo": "Miembro superior",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press banca con pausa",
+                  "detalle": "x4"
+                },
+                {
+                  "nombre": "Empuje balístico con barra",
+                  "detalle": "x6",
+                  "video": "https://www.youtube.com/shorts/pZ37oadcV2w?feature=share"
+                },
+                {
+                  "nombre": "Lanzamiento de balón medicinal frontal",
+                  "detalle": "x6"
+                },
+                {
+                  "nombre": "Remoergómetro",
+                  "detalle": "500 m en 3 mins"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Remo pendlay",
+                  "detalle": "x4",
+                  "video": "https://youtu.be/1zT1iugHBvo"
+                },
+                {
+                  "nombre": "Remo invertido balístico",
+                  "detalle": "x6"
+                },
+                {
+                  "nombre": "Lanzamiento de balón medicinal lateral",
+                  "detalle": "x6/lado"
+                },
+                {
+                  "nombre": "Remoergómetro",
+                  "detalle": "[150 m en 1-1:30 + 1 min descanso]x2"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C3",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hang power snatch",
+                  "detalle": "x4",
+                  "video": "https://youtu.be/z1j2QMBJF6c"
+                },
+                {
+                  "nombre": "Elevación lateral isométrica",
+                  "detalle": "x30s/lado"
+                }
+              ]
             }
           ]
         }
