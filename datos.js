@@ -138,6 +138,11 @@ var DATOS = {
               ]
             }
           ]
+        },
+        "2026-11-11": {
+          "titulo": "Descanso",
+          "ejercicios": [],
+          "descanso": true
         }
       }
     }
