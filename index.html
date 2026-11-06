@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi entrenamiento</title>
+<title>StrengthFactory</title>
 <style>
   :root {
     --chalk: #f4f5f0;
@@ -181,6 +181,64 @@
   .resultado p { margin: 0 0 6px; }
   .resultado .notas { background: var(--card); }
 
+  /* ---------- Marca y login ---------- */
+  #login { --chalk: #0f1c24; --card: #1a2b36; --line: #34495a; --ink: #f4f5f0; --muted: #a3b6c1; --accent: #ffd23f; --accent-ink: #0f1c24; background: var(--chalk); color: var(--ink); }
+  .login-box h1 { font-size: clamp(2.3rem, 10.5vw, 3.4rem); letter-spacing: 0; }
+  .login-box .cargo { font-family: var(--head); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-size: .88rem; margin: 6px 0 20px; }
+  .link-admin { display: block; margin: 34px auto 0; background: none; border: 0; color: var(--muted); font-size: .82rem; text-decoration: underline; padding: 6px; }
+  .marca-barra { background: #0f1c24; color: #ffd23f; font-family: var(--head); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .78rem; text-align: center; padding: 9px 12px; }
+
+  /* ---------- Vídeo, imagen, PDF ---------- */
+  a.btn { display: inline-block; text-decoration: none; }
+  .vid { margin-top: 8px; padding: 6px 12px; font-size: .9rem; }
+  .ej-img { display: block; max-width: 100%; max-height: 240px; border-radius: 8px; margin-top: 8px; }
+  .img-ed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .img-ed input { width: auto; margin: 0; flex: 1 1 160px; font-size: .85rem; padding: 6px; }
+  .img-ed .btn { padding: 6px 10px; font-size: .85rem; }
+  dialog:has(.video-wrap) { max-width: 640px; padding: 14px; }
+  .video-wrap { position: relative; padding-top: 56.25%; margin-bottom: 12px; background: #000; border-radius: 8px; overflow: hidden; }
+  .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #imprimir { display: none; }
+  @media print {
+    html, body { background: #fff !important; }
+    body > *:not(#imprimir) { display: none !important; }
+    #imprimir { display: block; color: #000; background: #fff; font-family: var(--body); }
+    #imprimir h1 { font-size: 22pt; margin-bottom: 2pt; }
+    #imprimir h2 { font-size: 14pt; margin: 0 0 6pt; }
+    #imprimir .p-firma { margin: 0 0 14pt; color: #444; }
+    #imprimir .p-dia { break-inside: avoid; margin: 0 0 14pt; padding-bottom: 10pt; border-bottom: 1px solid #999; }
+    #imprimir li { margin-bottom: 5pt; }
+    #imprimir img { max-width: 220px; max-height: 160px; display: block; margin: 4pt 0; }
+  }
+
+  /* ---------- Móvil ---------- */
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+  .nom, .det, .notas, .info, h3 { overflow-wrap: anywhere; }
+  .dos, .fila > * { min-width: 0; }
+  @media (max-width: 560px) {
+    body { font-size: 15px; }
+    header.top { padding: 12px 12px 6px; gap: 8px; }
+    header.top h1 { font-size: 1.35rem; width: 100%; margin-right: 0; order: -1; }
+    header.top .btn { padding: 7px 11px; font-size: .88rem; }
+    main.vista { padding: 8px 12px 50px; }
+    .cols { gap: 16px; }
+    .panel { padding: 16px; }
+    .panel h3 { font-size: 1.55rem; }
+    .cal-head h2 { font-size: 1.3rem; }
+    .day .n { font-size: .85rem; }
+    .fila { grid-template-columns: 1fr; }
+    .fila .ctrl { justify-content: flex-end; }
+    .circ-ed { padding: 10px; }
+    .circ-ed .fila.sub { margin-left: 0; }
+    .acciones .btn, .guardar .btn { flex: 1 1 100%; }
+    .rpe { grid-template-columns: repeat(5, 1fr); }
+    dialog { padding: 16px; }
+    dialog h2 { font-size: 1.4rem; }
+    .clientes { grid-template-columns: 1fr; }
+    #aviso { font-size: .9rem; }
+  }
+
   /* ---------- Diálogos y aviso ---------- */
   dialog { border: 2px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); padding: 22px; width: calc(100% - 32px); max-width: 460px; }
   dialog::backdrop { background: rgba(0, 0, 0, .5); }
@@ -200,12 +258,9 @@
 <!-- ===== LOGIN ===== -->
 <section id="login">
   <form class="login-box" id="loginForm" autocomplete="off">
-    <h1><span>Mi entrenamiento</span></h1>
-    <p class="sub">Elige cómo quieres entrar.</p>
-    <div class="tabs">
-      <button type="button" id="tabCliente" aria-pressed="true">Soy cliente</button>
-      <button type="button" id="tabAdmin" aria-pressed="false">Soy entrenador</button>
-    </div>
+    <h1><span>StrengthFactory</span></h1>
+    <p class="cargo">Programa de preparación física</p>
+    <p class="sub">Entra con tu nombre y contraseña para ver tu entrenamiento.</p>
     <div id="campoUsuario">
       <label for="usuario">Nombre</label>
       <input id="usuario" autocapitalize="none">
@@ -214,16 +269,19 @@
     <input id="clave" type="password" required>
     <p class="error" id="error" role="alert"></p>
     <button class="btn full" type="submit">Entrar</button>
+    <button type="button" id="tabAdmin" class="link-admin">Acceso entrenador</button>
   </form>
 </section>
 
 <!-- ===== APP ===== -->
 <div id="shell" hidden>
+  <div class="marca-barra">Aarón · Strength and Conditioning Coach</div>
   <header class="top">
     <button class="btn ghost" id="btnAtras" type="button" hidden>‹ Clientes</button>
     <h1 id="titulo"></h1>
     <button class="btn" id="btnPublicar" type="button" hidden disabled>Publicar cambios</button>
     <button class="btn ghost" id="btnAjustes" type="button" hidden>Ajustes</button>
+    <button class="btn ghost" id="btnPdf" type="button" hidden>Descargar PDF</button>
     <button class="btn ghost" id="btnSalir" type="button">Salir</button>
   </header>
 
@@ -299,6 +357,22 @@
   </div>
 </dialog>
 
+<dialog id="dlgVideo">
+  <div class="video-wrap"><iframe id="ytFrame" title="Vídeo del ejercicio" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+  <div class="botones"><a id="ytLink" class="btn ghost" target="_blank" rel="noopener">Abrir en YouTube</a><button class="btn" id="vCerrar" type="button">Cerrar</button></div>
+</dialog>
+
+<dialog id="dlgPdf">
+  <h2>Descargar PDF</h2>
+  <label for="pTipo">¿Qué quieres descargar?</label>
+  <select id="pTipo"><option value="dia">Un día</option><option value="semana">Una semana</option><option value="mes">Un mes</option></select>
+  <label for="pOpc">Elige</label>
+  <select id="pOpc"></select>
+  <p class="nota">Los días y las semanas son los del mes que ves en el calendario. Se abrirá la ventana de impresión: elige «Guardar como PDF».</p>
+  <div class="botones"><button class="btn ghost" id="pCancelar" type="button">Cancelar</button><button class="btn" id="pGenerar" type="button">Generar PDF</button></div>
+</dialog>
+
+<div id="imprimir"></div>
 <div id="aviso" role="status" hidden></div>
 
 <script src="datos.js"></script>
@@ -321,6 +395,7 @@
   var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo} }
   var progCargado = false;
   var progTimer = null;
+  var pendientes = {};        // imágenes elegidas que se suben al publicar
 
   var $ = function (id) { return document.getElementById(id); };
   var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
@@ -437,14 +512,12 @@
   /* ================= Login ================= */
   function elegirTipo(t) {
     tipoLogin = t;
-    $("tabCliente").setAttribute("aria-pressed", t === "cliente");
-    $("tabAdmin").setAttribute("aria-pressed", t === "admin");
     $("campoUsuario").hidden = (t === "admin");
     $("labelClave").textContent = t === "admin" ? "Contraseña de entrenador" : "Contraseña";
+    $("tabAdmin").textContent = t === "admin" ? "‹ Volver al acceso de cliente" : "Acceso entrenador";
     $("error").textContent = "";
   }
-  $("tabCliente").addEventListener("click", function () { elegirTipo("cliente"); });
-  $("tabAdmin").addEventListener("click", function () { elegirTipo("admin"); });
+  $("tabAdmin").addEventListener("click", function () { elegirTipo(tipoLogin === "admin" ? "cliente" : "admin"); });
 
   $("loginForm").addEventListener("submit", function (ev) {
     ev.preventDefault();
@@ -479,7 +552,7 @@
     $("shell").hidden = true;
     $("login").hidden = false;
     $("clave").value = "";
-    $("error").textContent = "";
+    elegirTipo("cliente");
     $("btnPublicar").hidden = true;
     $("btnAjustes").hidden = true;
   });
@@ -488,6 +561,7 @@
     $("vistaClientes").hidden = (v !== "clientes");
     $("vistaCal").hidden = (v !== "cal");
     $("btnAtras").hidden = !(modo === "admin" && v === "cal");
+    $("btnPdf").hidden = (modo !== "cliente");
     if (modo === "admin") $("titulo").textContent = v === "cal" ? cliente.nombre : "Mis clientes";
     else $("titulo").textContent = "Hola, " + cliente.nombre;
   }
@@ -694,6 +768,7 @@
           var l2 = el("li");
           l2.appendChild(el("span", "nom", y.nombre));
           if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
+          l2.appendChild(mediaEj(y));
           sub.appendChild(l2);
         });
         box.appendChild(sub);
@@ -701,6 +776,7 @@
       } else {
         cuerpo.appendChild(el("span", "nom", x.nombre));
         if (x.detalle) cuerpo.appendChild(el("span", "det", x.detalle));
+        cuerpo.appendChild(mediaEj(x));
       }
       if (usa) {
         var cb = el("input"); cb.type = "checkbox";
@@ -802,12 +878,44 @@
     inp.addEventListener("input", function () { obj[prop] = inp.value; });
     return inp;
   }
+  function reducir(file, cb) {
+    var img = new Image(), u = URL.createObjectURL(file);
+    img.onload = function () {
+      var k = Math.min(1, 800 / Math.max(img.width, img.height));
+      var c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u);
+      cb(c.toDataURL("image/jpeg", 0.75));
+    };
+    img.src = u;
+  }
+  function selectorImagen(it) {
+    var w = el("div", "img-ed");
+    var f = el("input"); f.type = "file"; f.accept = "image/*";
+    var info = el("span", "vacio", it.imagen ? "Imagen cargada ✓" : "Sin imagen");
+    f.addEventListener("change", function () {
+      if (!f.files[0]) return;
+      reducir(f.files[0], function (url) {
+        var ruta = "imagenes/" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + ".jpg";
+        pendientes[ruta] = url.split(",")[1];
+        it.imagen = ruta;
+        info.textContent = "Imagen lista ✓ (se sube al publicar)";
+      });
+    });
+    var q = el("button", "btn ghost", "Quitar imagen"); q.type = "button";
+    q.addEventListener("click", function () { delete pendientes[it.imagen]; delete it.imagen; info.textContent = "Sin imagen"; f.value = ""; });
+    w.appendChild(f); w.appendChild(info); w.appendChild(q);
+    return w;
+  }
   function filaEjercicio(arr, i, key, sub) {
     var it = arr[i];
     var f = el("div", "fila" + (sub ? " sub" : ""));
     var dos = el("div", "dos");
     dos.appendChild(campo(it, "nombre", "Ejercicio", key));
     dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
+    dos.appendChild(campo(it, "video", "Enlace de YouTube (opcional)"));
+    dos.appendChild(selectorImagen(it));
     f.appendChild(dos);
     f.appendChild(controles(arr, i));
     return f;
@@ -918,6 +1026,12 @@
     }
   }
 
+  function copiaEj(y) {
+    var r = { nombre: y.nombre.trim(), detalle: (y.detalle || "").trim() };
+    if ((y.video || "").trim()) r.video = y.video.trim();
+    if (y.imagen) r.imagen = y.imagen;
+    return r;
+  }
   function limpiar(b) {
     var res = { titulo: (b.titulo || "").trim(), ejercicios: [] };
     var notas = (b.notas || "").trim();
@@ -931,13 +1045,13 @@
       if (it.tipo === "circuito") {
         var inner = (it.ejercicios || [])
           .filter(function (y) { return (y.nombre || "").trim(); })
-          .map(function (y) { return { nombre: y.nombre.trim(), detalle: (y.detalle || "").trim() }; });
+          .map(copiaEj);
         if (inner.length) res.ejercicios.push({
           tipo: "circuito", nombre: (it.nombre || "").trim() || "Circuito",
           detalle: (it.detalle || "").trim(), ejercicios: inner
         });
       } else if ((it.nombre || "").trim()) {
-        res.ejercicios.push({ nombre: it.nombre.trim(), detalle: (it.detalle || "").trim() });
+        res.ejercicios.push(copiaEj(it));
       }
     });
     if (!res.ejercicios.length) return null;
@@ -1041,6 +1155,15 @@
         return r.json();
       })
       .then(function (j) {
+        var rutas = Object.keys(pendientes);
+        return Promise.all(rutas.map(function (r) {
+          return fetch("https://api.github.com/repos/" + encodeURIComponent(g.owner) + "/" + encodeURIComponent(g.repo) + "/contents/" + r, {
+            method: "PUT", headers: Object.assign({ "Content-Type": "application/json" }, h),
+            body: JSON.stringify({ message: "Subir imagen", content: pendientes[r], branch: g.branch })
+          }).then(function (x) { if (!x.ok) throw new Error(mensajeError(x.status)); delete pendientes[r]; });
+        })).then(function () { return j; });
+      })
+      .then(function (j) {
         var contenido = btoa(unescape(encodeURIComponent(serializar())));
         return fetch(url, {
           method: "PUT",
@@ -1104,6 +1227,108 @@
     } else {
       aviso("Tu navegador no permite copiar desde aquí.", true);
     }
+  });
+
+  /* ================= Vídeo ================= */
+  function ytId(u) {
+    var m = (u || "").match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+  function mediaEj(x) {
+    var fr = document.createDocumentFragment();
+    if (x.imagen) {
+      var im = el("img", "ej-img"); im.src = x.imagen; im.alt = x.nombre || "Ejercicio"; im.loading = "lazy";
+      fr.appendChild(im);
+    }
+    if (x.video) {
+      var id = ytId(x.video);
+      if (id) {
+        var b = el("button", "btn ghost vid", "▶ Ver vídeo"); b.type = "button";
+        b.addEventListener("click", function () {
+          $("ytFrame").src = "https://www.youtube-nocookie.com/embed/" + id + "?rel=0&playsinline=1";
+          $("ytLink").href = "https://www.youtube.com/watch?v=" + id;
+          $("dlgVideo").showModal();
+        });
+        fr.appendChild(b);
+      } else if (/^https?:\/\//.test(x.video)) {
+        var a = el("a", "btn ghost vid", "Ver enlace"); a.href = x.video; a.target = "_blank"; a.rel = "noopener";
+        fr.appendChild(a);
+      }
+    }
+    return fr;
+  }
+  $("vCerrar").addEventListener("click", function () { $("dlgVideo").close(); });
+  $("dlgVideo").addEventListener("close", function () { $("ytFrame").src = ""; });
+
+  /* ================= PDF (ventana de impresión) ================= */
+  function opcionesPdf() {
+    var t = $("pTipo").value, s = $("pOpc"); s.textContent = "";
+    var y = vista.getFullYear(), m = vista.getMonth();
+    function op(v, txt) { var o = el("option", null, txt); o.value = v; s.appendChild(o); }
+    var corto = { day: "numeric", month: "short" };
+    if (t === "dia") {
+      for (var d = 1, u = new Date(y, m + 1, 0).getDate(); d <= u; d++) {
+        var f = new Date(y, m, d), e = entrenoDe(f);
+        if (e) op(clave(f), f.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }) + " · " + e.titulo);
+      }
+    } else if (t === "semana") {
+      var fin = new Date(y, m + 1, 0);
+      for (var a = new Date(y, m, 1 - idxSemana(new Date(y, m, 1))); a <= fin; a = new Date(a.getFullYear(), a.getMonth(), a.getDate() + 7)) {
+        var z = new Date(a.getFullYear(), a.getMonth(), a.getDate() + 6);
+        op(clave(a), "Semana del " + a.toLocaleDateString("es-ES", corto) + " al " + z.toLocaleDateString("es-ES", corto));
+      }
+    } else {
+      var h = new Date();
+      for (var k = -2; k <= 9; k++) {
+        var mm = new Date(h.getFullYear(), h.getMonth() + k, 1);
+        op(clave(mm), mm.toLocaleDateString("es-ES", { month: "long", year: "numeric" }));
+      }
+      s.value = clave(new Date(h.getFullYear(), h.getMonth(), 1));
+    }
+  }
+  function nodoDia(f, e) {
+    var d = el("div", "p-dia");
+    d.appendChild(el("h2", null, f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " — " + e.titulo));
+    if (e.notas) d.appendChild(el("p", null, "Notas: " + e.notas));
+    function ej(x, ul) {
+      var li = el("li", null, x.nombre + (x.detalle ? " — " + x.detalle : ""));
+      if (x.video) li.appendChild(el("div", null, "Vídeo: " + x.video));
+      if (x.imagen) { var im = el("img"); im.src = x.imagen; li.appendChild(im); }
+      ul.appendChild(li);
+    }
+    var ul = el("ul");
+    (e.ejercicios || []).forEach(function (x) {
+      if (x.tipo === "circuito") {
+        var li = el("li", null, "Circuito: " + (x.nombre || "") + (x.detalle ? " — " + x.detalle : ""));
+        var u2 = el("ul");
+        (x.ejercicios || []).forEach(function (y) { ej(y, u2); });
+        li.appendChild(u2); ul.appendChild(li);
+      } else ej(x, ul);
+    });
+    if (ul.children.length) d.appendChild(ul);
+    return d;
+  }
+  $("btnPdf").addEventListener("click", function () { opcionesPdf(); $("dlgPdf").showModal(); });
+  $("pTipo").addEventListener("change", opcionesPdf);
+  $("pCancelar").addEventListener("click", function () { $("dlgPdf").close(); });
+  $("pGenerar").addEventListener("click", function () {
+    var v = $("pOpc").value, t = $("pTipo").value;
+    if (!v) { aviso("No hay entrenamientos en ese periodo.", true); return; }
+    var q = v.split("-"), ini = new Date(+q[0], +q[1] - 1, +q[2]);
+    var n = t === "semana" ? 7 : t === "mes" ? new Date(ini.getFullYear(), ini.getMonth() + 1, 0).getDate() : 1;
+    var c = $("imprimir"); c.textContent = "";
+    c.appendChild(el("h1", null, "Entrenamientos de " + cliente.nombre));
+    c.appendChild(el("p", "p-firma", "StrengthFactory · Aarón, Strength and Conditioning Coach"));
+    var hay = false;
+    for (var i = 0; i < n; i++) {
+      var f = new Date(ini.getFullYear(), ini.getMonth(), ini.getDate() + i), e = entrenoDe(f);
+      if (e) { c.appendChild(nodoDia(f, e)); hay = true; }
+    }
+    if (!hay) { aviso("No hay entrenamientos en ese periodo.", true); return; }
+    $("dlgPdf").close();
+    var imgs = [].slice.call(c.querySelectorAll("img"));
+    Promise.all(imgs.map(function (im) { return im.complete ? 1 : new Promise(function (r) { im.onload = im.onerror = r; }); }))
+      .then(function () { setTimeout(function () { window.print(); }, 150); });
   });
 
   /* ================= Recordar sesión de la pestaña ================= */
