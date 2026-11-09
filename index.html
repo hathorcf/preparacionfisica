@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>StrengthFactory</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1c24">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="StrengthFactory">
 <style>
   :root {
     --chalk: #f4f5f0;
@@ -142,7 +148,7 @@
   .ejercicios > li { padding: 12px 0; border-top: 1px solid var(--line); }
   .ejercicios > li:first-child { border-top: 0; padding-top: 0; }
   .ejercicios .nom { font-weight: 700; display: block; }
-  .ejercicios .det { color: var(--muted); display: inline-block; margin-right: 8px; }
+  .ejercicios .det { color: var(--muted); }
   .vacio { color: var(--muted); margin: 0; }
   .circuito { border: 2px solid var(--accent); border-radius: 8px; padding: 12px 14px; }
   .circuito .cab { font-family: var(--head); font-size: 1.2rem; font-weight: 700; color: var(--accent); }
@@ -190,7 +196,9 @@
 
   /* ---------- Vídeo, imagen, PDF ---------- */
   a.btn { display: inline-block; text-decoration: none; }
-  .vid { display: inline-flex !important; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 8px; font-size: .78rem; width: fit-content; }
+  .ejercicios .det { display: block; }
+  .btn.vid { display: block; width: fit-content; margin-top: 12px; padding: 8px 14px; font-size: .9rem; }
+  .ej-img + .btn.vid { margin-top: 10px; }
   .ej-img { display: block; max-width: 100%; max-height: 240px; border-radius: 8px; margin-top: 8px; }
   .img-ed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .img-ed input { width: auto; margin: 0; flex: 1 1 160px; font-size: .85rem; padding: 6px; }
@@ -218,6 +226,7 @@
   .dos, .fila > * { min-width: 0; }
   @media (max-width: 560px) {
     body { font-size: 15px; }
+    input, textarea, select { font-size: 16px; }
     header.top { padding: 12px 12px 6px; gap: 8px; }
     header.top h1 { font-size: 1.35rem; width: 100%; margin-right: 0; order: -1; }
     header.top .btn { padding: 7px 11px; font-size: .88rem; }
@@ -238,6 +247,30 @@
     .clientes { grid-template-columns: 1fr; }
     #aviso { font-size: .9rem; }
   }
+
+  /* ---------- Gráficas ---------- */
+  dialog { max-height: 92vh; overflow: auto; }
+  #dlgProg { max-width: 560px; }
+  dialog h3 { font-size: 1.2rem; margin: 18px 0 6px; }
+  .graf svg { width: 100%; height: auto; display: block; }
+  .graf text { fill: var(--muted); font-size: 9px; font-family: var(--body); }
+  .graf text.val { fill: var(--ink); font-weight: 700; }
+  #dlgProg select { margin: 4px 0 10px; }
+
+  /* ---------- Registro de pesos ---------- */
+  .item > div { min-width: 0; }
+  .peso { margin-top: 10px; }
+  .peso .ult { display: block; color: var(--accent); font-size: .82rem; font-weight: 600; margin-bottom: 6px; }
+  .peso-f { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+  .peso-f label { margin: 0; font-size: .78rem; color: var(--muted); font-weight: 600; }
+  .peso-f input { margin: 3px 0 0; padding: 8px 10px; font-size: 16px; }
+
+  /* ---------- Mensajes y resumen ---------- */
+  .msg-box { margin-bottom: 18px; }
+  .msg-box textarea { margin-bottom: 0; }
+  .cli .res { display: block; margin-top: 8px; font-size: .85rem; color: var(--muted); }
+  .cli .res.alerta { color: var(--err); font-weight: 600; }
+  .banner { background: var(--tape); color: #17262b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-weight: 600; white-space: pre-line; overflow-wrap: anywhere; }
 
   /* ---------- Diálogos y aviso ---------- */
   dialog { border: 2px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); padding: 22px; width: calc(100% - 32px); max-width: 460px; }
@@ -269,6 +302,7 @@
     <input id="clave" type="password" required>
     <p class="error" id="error" role="alert"></p>
     <button class="btn full" type="submit">Entrar</button>
+    <button type="button" id="btnInstalar" class="btn ghost full" hidden style="margin-top:14px">Instalar como app</button>
     <button type="button" id="tabAdmin" class="link-admin">Acceso entrenador</button>
   </form>
 </section>
@@ -281,6 +315,7 @@
     <h1 id="titulo"></h1>
     <button class="btn" id="btnPublicar" type="button" hidden disabled>Publicar cambios</button>
     <button class="btn ghost" id="btnAjustes" type="button" hidden>Ajustes</button>
+    <button class="btn ghost" id="btnProg" type="button" hidden>Progreso</button>
     <button class="btn ghost" id="btnPdf" type="button" hidden>Descargar PDF</button>
     <button class="btn ghost" id="btnSalir" type="button">Salir</button>
   </header>
@@ -291,11 +326,13 @@
       <p id="contador"></p>
       <button class="btn" id="btnNuevo" type="button">Nuevo cliente</button>
     </div>
+    <div class="msg-box"><label for="msgGlobal">Mensaje para todos los clientes (opcional)</label><textarea id="msgGlobal" placeholder="Ej. Esta semana descargamos un 10 %."></textarea></div>
     <div class="clientes" id="listaClientes"></div>
   </main>
 
   <!-- Calendario + panel -->
   <main class="vista" id="vistaCal" hidden>
+    <div id="bannerMsg" class="banner" hidden></div>
     <div class="cols">
       <section aria-label="Calendario">
         <div class="cal-head">
@@ -322,6 +359,8 @@
   <input id="cUsuario" autocapitalize="none">
   <label for="cClave">Contraseña</label>
   <input id="cClave">
+  <label for="cMensaje">Mensaje solo para este cliente (opcional)</label>
+  <textarea id="cMensaje"></textarea>
   <p class="error" id="cError" role="alert"></p>
   <div class="botones">
     <button class="btn danger" id="cEliminar" type="button">Eliminar</button>
@@ -357,6 +396,19 @@
   </div>
 </dialog>
 
+<dialog id="dlgProg">
+  <h2 id="progTitulo">Progreso</h2>
+  <h3>Cumplimiento semanal</h3>
+  <p class="nota">Porcentaje de ejercicios completados sobre los asignados (últimas 8 semanas).</p>
+  <div class="graf" id="pgCump"></div>
+  <h3>Esfuerzo percibido medio</h3>
+  <div class="graf" id="pgEsf"></div>
+  <h3>Peso por ejercicio</h3>
+  <select id="pgEj"></select>
+  <div class="graf" id="pgPeso"></div>
+  <div class="botones"><button class="btn" id="pgCerrar" type="button">Cerrar</button></div>
+</dialog>
+
 <dialog id="dlgVideo">
   <div class="video-wrap"><iframe id="ytFrame" title="Vídeo del ejercicio" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
   <div class="botones"><a id="ytLink" class="btn ghost" target="_blank" rel="noopener">Abrir en YouTube</a><button class="btn" id="vCerrar" type="button">Cerrar</button></div>
@@ -370,6 +422,21 @@
   <select id="pOpc"></select>
   <p class="nota">Los días y las semanas son los del mes que ves en el calendario. Se abrirá la ventana de impresión: elige «Guardar como PDF».</p>
   <div class="botones"><button class="btn ghost" id="pCancelar" type="button">Cancelar</button><button class="btn" id="pGenerar" type="button">Generar PDF</button></div>
+</dialog>
+
+<dialog id="dlgCopiar">
+  <h2>Copiar entrenamiento</h2>
+  <label for="cpTipo">¿Qué quieres copiar?</label>
+  <select id="cpTipo"><option value="dia">Este día</option><option value="semana">Toda la semana de este día</option></select>
+  <label for="cpCliente">¿A qué cliente?</label>
+  <select id="cpCliente"></select>
+  <label for="cpFecha">Fecha de destino</label>
+  <input type="date" id="cpFecha">
+  <label for="cpRep">Repetir en cuántas semanas seguidas (solo al copiar una semana)</label>
+  <input type="number" id="cpRep" min="1" max="12" value="1">
+  <p class="nota">Si copias una semana, se pega en la semana que contiene esa fecha. Sustituye lo que haya en esos días. Se copia lo ya guardado.</p>
+  <p class="error" id="cpError" role="alert"></p>
+  <div class="botones"><button class="btn ghost" id="cpCancelar" type="button">Cancelar</button><button class="btn" id="cpCopiar" type="button">Copiar</button></div>
 </dialog>
 
 <div id="imprimir"></div>
@@ -562,6 +629,7 @@
     $("vistaCal").hidden = (v !== "cal");
     $("btnAtras").hidden = !(modo === "admin" && v === "cal");
     $("btnPdf").hidden = (modo !== "cliente");
+    $("btnProg").hidden = !(v === "cal" && fbConf());
     if (modo === "admin") $("titulo").textContent = v === "cal" ? cliente.nombre : "Mis clientes";
     else $("titulo").textContent = "Hola, " + cliente.nombre;
   }
@@ -593,6 +661,7 @@
   function pintarClientes() {
     var cont = $("listaClientes");
     cont.textContent = "";
+    $("msgGlobal").value = DATOS.mensaje || "";
     var n = DATOS.clientes.length;
     $("contador").textContent = n === 0 ? "Aún no tienes clientes." : n + (n === 1 ? " cliente" : " clientes");
     DATOS.clientes.forEach(function (c) {
@@ -601,6 +670,9 @@
       main.type = "button";
       main.appendChild(el("span", "nom", c.nombre));
       main.appendChild(el("span", "usr", "Usuario: " + c.usuario));
+      var res = el("span", "res");
+      if (fbConf()) { res.textContent = "Cargando resumen…"; resumen(c, res); }
+      main.appendChild(res);
       main.addEventListener("click", function () { cliente = c; abrirCalendario(); });
       var ed = el("button", "ed", "Editar");
       ed.type = "button";
@@ -618,6 +690,7 @@
     pintarClientes();
   });
   $("btnNuevo").addEventListener("click", function () { abrirDialogoCliente(null); });
+  $("msgGlobal").addEventListener("input", function () { DATOS.mensaje = this.value; marcarSucio(); });
 
   /* ---------- Diálogo cliente ---------- */
   var editando = null;
@@ -627,6 +700,7 @@
     $("cNombre").value = c ? c.nombre : "";
     $("cUsuario").value = c ? c.usuario : "";
     $("cClave").value = c ? c.clave : "";
+    $("cMensaje").value = c ? (c.mensaje || "") : "";
     $("cError").textContent = "";
     $("cEliminar").hidden = !c;
     $("dlgCliente").showModal();
@@ -642,10 +716,10 @@
     if (repetido) { $("cError").textContent = "Ya existe otro cliente con ese usuario."; return; }
     if (editando) {
       if (!editando.id) editando.id = idProg(editando);
-      editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass;
+      editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass; editando.mensaje = $("cMensaje").value.trim();
     } else {
       DATOS.clientes.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {} });
+        usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {}, mensaje: $("cMensaje").value.trim() });
     }
     marcarSucio();
     $("dlgCliente").close();
@@ -665,6 +739,7 @@
     var h = new Date();
     vista = new Date(h.getFullYear(), h.getMonth(), 1);
     mostrarVista("cal");
+    pintarMensaje();
     seleccionar(new Date(h.getFullYear(), h.getMonth(), h.getDate()));
     var c = cliente;
     cargarProgreso(c, function () {
@@ -764,11 +839,12 @@
         box.appendChild(el("span", "cab", x.nombre || "Circuito"));
         if (x.detalle) box.appendChild(el("span", "info", x.detalle));
         var sub = el("ul");
-        (x.ejercicios || []).forEach(function (y) {
+        (x.ejercicios || []).forEach(function (y, j) {
           var l2 = el("li");
           l2.appendChild(el("span", "nom", y.nombre));
           if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
           l2.appendChild(mediaEj(y));
+          if (usa) l2.appendChild(regPeso(y, i + "." + j));
           sub.appendChild(l2);
         });
         box.appendChild(sub);
@@ -777,6 +853,7 @@
         cuerpo.appendChild(el("span", "nom", x.nombre));
         if (x.detalle) cuerpo.appendChild(el("span", "det", x.detalle));
         cuerpo.appendChild(mediaEj(x));
+        if (usa) cuerpo.appendChild(regPeso(x, String(i)));
       }
       if (usa) {
         var cb = el("input"); cb.type = "checkbox";
@@ -798,6 +875,51 @@
     });
     p.appendChild(ul);
     if (usa) pintarSeguimiento(p, pd);
+  }
+
+  function recorrer(e, fn) {
+    (e.ejercicios || []).forEach(function (x, i) {
+      if (x.tipo === "circuito") (x.ejercicios || []).forEach(function (y, j) { fn(y, i + "." + j); });
+      else fn(x, String(i));
+    });
+  }
+  function textoPeso(r) { return [r.kg ? r.kg + " kg" : "", r.reps].filter(Boolean).join(" · "); }
+  function ultimoRegistro(nombre) {
+    var cur = clave(seleccionado), n = (nombre || "").trim().toLowerCase(), res = null;
+    Object.keys(progreso).sort().reverse().forEach(function (k) {
+      if (res || k >= cur || !progreso[k].pesos) return;
+      var q = k.split("-"), e = entrenoDe(new Date(+q[0], +q[1] - 1, +q[2]));
+      if (!e) return;
+      recorrer(e, function (x, path) {
+        var r = progreso[k].pesos[path];
+        if (!res && r && (r.kg || r.reps) && (x.nombre || "").trim().toLowerCase() === n) res = { k: k, r: r };
+      });
+    });
+    return res;
+  }
+  function regPeso(x, path) {
+    var w = el("div", "peso");
+    var pd = progDia(false), r = (pd && pd.pesos && pd.pesos[path]) || {};
+    var u = ultimoRegistro(x.nombre);
+    if (u) {
+      var q = u.k.split("-");
+      w.appendChild(el("span", "ult", "Última vez (" + new Date(+q[0], +q[1] - 1, +q[2]).toLocaleDateString("es-ES", { day: "numeric", month: "short" }) + "): " + textoPeso(u.r)));
+    }
+    var f = el("div", "peso-f");
+    function campoP(prop, etiqueta, ph, teclado) {
+      var l = el("label"); l.appendChild(el("span", null, etiqueta));
+      var i = el("input"); i.value = r[prop] || ""; i.placeholder = ph; i.disabled = !progCargado;
+      if (teclado) i.setAttribute("inputmode", teclado);
+      i.addEventListener("input", function () {
+        var d = progDia(true); d.pesos = d.pesos || {}; d.pesos[path] = d.pesos[path] || {};
+        d.pesos[path][prop] = i.value; programarGuardado();
+      });
+      l.appendChild(i); return l;
+    }
+    f.appendChild(campoP("kg", "Peso (kg)", "Ej. 60", "decimal"));
+    f.appendChild(campoP("reps", "Repeticiones", "Ej. 10-10-9", null));
+    w.appendChild(f);
+    return w;
   }
 
   function pintarSeguimiento(p, pd) {
@@ -843,11 +965,17 @@
     var e = entrenoDe(seleccionado);
     var total = e && e.ejercicios ? e.ejercicios.length : 0, h = 0;
     for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
-    if (!h && !p.esfuerzo && !(p.obs || "").trim()) return;
+    var pes = [];
+    if (e && p.pesos) recorrer(e, function (x, path) { var r = p.pesos[path]; if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r)); });
+    if (!h && !p.esfuerzo && !(p.obs || "").trim() && !pes.length) return;
     var box = el("div", "resultado");
     box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente"));
     if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
     if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
+    if (pes.length) {
+      box.appendChild(el("p", "editor-h", "Pesos y repeticiones"));
+      pes.forEach(function (t) { box.appendChild(el("p", null, t)); });
+    }
     if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
     c.appendChild(box);
   }
@@ -912,7 +1040,15 @@
     var it = arr[i];
     var f = el("div", "fila" + (sub ? " sub" : ""));
     var dos = el("div", "dos");
-    dos.appendChild(campo(it, "nombre", "Ejercicio", key));
+    var ni = campo(it, "nombre", "Ejercicio", key);
+    ni.setAttribute("list", "dlEj");
+    ni.addEventListener("change", function () {
+      var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
+      if (!a) return;
+      ["detalle", "video", "imagen"].forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
+      if (cambio) pintarEditor();
+    });
+    dos.appendChild(ni);
     dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
     dos.appendChild(campo(it, "video", "Enlace de YouTube (opcional)"));
     dos.appendChild(selectorImagen(it));
@@ -949,6 +1085,9 @@
     var f = seleccionado;
     p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
 
+    var dl = el("datalist"); dl.id = "dlEj"; var bib = biblioteca();
+    Object.keys(bib).forEach(function (k) { var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o); });
+    p.appendChild(dl);
     var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
@@ -1007,6 +1146,9 @@
     var bg = el("button", "btn", "Guardar día"); bg.type = "button";
     bg.addEventListener("click", guardarDia);
     g.appendChild(bg);
+    var bc = el("button", "btn ghost", "Copiar a otras fechas"); bc.type = "button";
+    bc.addEventListener("click", abrirCopiar);
+    g.appendChild(bc);
     if (entrenoDe(f)) {
       var bq = el("button", "btn danger", "Quitar este día"); bq.type = "button";
       bq.addEventListener("click", quitarDia);
@@ -1229,6 +1371,102 @@
     }
   });
 
+  /* ================= Mensajes, resumen y biblioteca ================= */
+  function pintarMensaje() {
+    var b = $("bannerMsg"), t = [];
+    if (modo === "cliente") { if (DATOS.mensaje) t.push(DATOS.mensaje); if (cliente.mensaje) t.push(cliente.mensaje); }
+    b.textContent = t.join("\n\n"); b.hidden = !t.length;
+  }
+  function resumen(c, res) {
+    fetch(urlProg(c) + "?key=" + encodeURIComponent(DATOS.firebase.apiKey)).then(function (r) {
+      if (r.status === 404) return {};
+      if (!r.ok) throw new Error();
+      return r.json().then(function (j) { return j.fields && j.fields.datos ? JSON.parse(j.fields.datos.stringValue) : {}; });
+    }).then(function (pr) {
+      var h = new Date(), lun = new Date(h.getFullYear(), h.getMonth(), h.getDate() - idxSemana(h));
+      var plan = 0, hecho = 0, suma = 0, nr = 0, ult = "", k;
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(lun.getFullYear(), lun.getMonth(), lun.getDate() + i), e = entrenoCli(c, d), q = pr[clave(d)];
+        var t = e && !e.descanso ? (e.ejercicios || []).length : 0;
+        plan += t;
+        if (q) {
+          for (var j = 0; j < t; j++) if (q.hechos && q.hechos[j]) hecho++;
+          if (q.esfuerzo) { suma += q.esfuerzo; nr++; }
+        }
+      }
+      for (k in pr) if (((pr[k].hechos && Object.keys(pr[k].hechos).length) || pr[k].esfuerzo) && k > ult) ult = k;
+      var txt = "Esta semana: " + hecho + "/" + plan + " ejercicios" + (nr ? " · esfuerzo medio " + (suma / nr).toFixed(1) : "");
+      var alerta = false;
+      if (!ult) { txt += " · sin actividad registrada"; alerta = true; }
+      else {
+        var z = ult.split("-");
+        var dias = Math.round((new Date(h.getFullYear(), h.getMonth(), h.getDate()) - new Date(+z[0], +z[1] - 1, +z[2])) / 86400000);
+        txt += " · último: " + (dias <= 0 ? "hoy" : "hace " + dias + (dias === 1 ? " día" : " días"));
+        alerta = dias >= 4;
+      }
+      res.textContent = txt;
+      if (alerta) res.classList.add("alerta");
+    }).catch(function () { res.textContent = "No se pudo cargar el resumen"; });
+  }
+  function biblioteca() {
+    var m = {};
+    function add(x) {
+      if (!x || !x.nombre || !x.nombre.trim()) return;
+      var k = x.nombre.trim().toLowerCase(), a = m[k];
+      if (!a) m[k] = { nombre: x.nombre.trim(), detalle: x.detalle || "", video: x.video || "", imagen: x.imagen || "" };
+      else { a.video = a.video || x.video || ""; a.imagen = a.imagen || x.imagen || ""; a.detalle = a.detalle || x.detalle || ""; }
+    }
+    function dia(e) {
+      if (!e) return;
+      (e.ejercicios || []).forEach(function (x) { if (x.tipo === "circuito") (x.ejercicios || []).forEach(add); else add(x); });
+    }
+    DATOS.clientes.forEach(function (c) {
+      for (var a in c.semanal || {}) dia(c.semanal[a]);
+      for (var b in c.dias || {}) dia(c.dias[b]);
+    });
+    return m;
+  }
+
+  /* ================= Copiar días / semanas ================= */
+  function entrenoCli(c, d) {
+    var k = clave(d);
+    if (hay(c.dias, k)) return c.dias[k];
+    return (c.semanal && c.semanal[DIAS[idxSemana(d)]]) || null;
+  }
+  function abrirCopiar() {
+    var s = $("cpCliente"); s.textContent = "";
+    DATOS.clientes.forEach(function (c, i) {
+      var o = el("option", null, c.nombre + (c === cliente ? " (este cliente)" : "")); o.value = i; s.appendChild(o);
+    });
+    s.value = DATOS.clientes.indexOf(cliente);
+    $("cpFecha").value = clave(seleccionado);
+    $("cpError").textContent = "";
+    $("dlgCopiar").showModal();
+  }
+  $("cpCancelar").addEventListener("click", function () { $("dlgCopiar").close(); });
+  $("cpCopiar").addEventListener("click", function () {
+    var v = $("cpFecha").value;
+    if (!v) { $("cpError").textContent = "Elige la fecha de destino."; return; }
+    var q = v.split("-"), dest = new Date(+q[0], +q[1] - 1, +q[2]);
+    var dst = DATOS.clientes[+$("cpCliente").value];
+    var sem = $("cpTipo").value === "semana", n = sem ? 7 : 1;
+    var o0 = sem ? new Date(seleccionado.getFullYear(), seleccionado.getMonth(), seleccionado.getDate() - idxSemana(seleccionado)) : seleccionado;
+    var d0 = sem ? new Date(dest.getFullYear(), dest.getMonth(), dest.getDate() - idxSemana(dest)) : dest;
+    dst.dias = dst.dias || {};
+    var cuenta = 0, reps = sem ? Math.max(1, Math.min(12, +$("cpRep").value || 1)) : 1;
+    for (var w = 0; w < reps; w++) for (var i = 0; i < n; i++) {
+      var o = new Date(o0.getFullYear(), o0.getMonth(), o0.getDate() + i);
+      var d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i + 7 * w);
+      var e = entrenoCli(cliente, o), k = clave(d);
+      if (e) { dst.dias[k] = clonar(e); cuenta++; }
+      else if (entrenoCli(dst, d)) dst.dias[k] = null;
+    }
+    marcarSucio();
+    $("dlgCopiar").close();
+    pintarCalendario();
+    aviso(cuenta ? "Copiado (" + cuenta + (cuenta === 1 ? " día" : " días") + "). Recuerda pulsar «Publicar cambios»." : "No había entrenamientos que copiar en ese periodo.");
+  });
+
   /* ================= Vídeo ================= */
   function ytId(u) {
     var m = (u || "").match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
@@ -1330,6 +1568,103 @@
     Promise.all(imgs.map(function (im) { return im.complete ? 1 : new Promise(function (r) { im.onload = im.onerror = r; }); }))
       .then(function () { setTimeout(function () { window.print(); }, 150); });
   });
+
+  /* ================= Gráficas de progreso ================= */
+  function numero(v) { var n = parseFloat(String(v || "").replace(",", ".")); return isNaN(n) ? null : n; }
+  function svgBarras(et, val, max, suf) {
+    if (val.every(function (v) { return v === null; })) return '<p class="vacio">Sin datos todavía.</p>';
+    var W = 320, H = 160, pb = 20, pt = 16, n = et.length, bw = W / n;
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img"><line x1="0" y1="' + (H - pb) + '" x2="' + W + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
+    for (var i = 0; i < n; i++) {
+      var x = i * bw + bw / 2;
+      if (val[i] !== null) {
+        var h = Math.max(2, val[i] / max * (H - pb - pt));
+        s += '<rect x="' + (x - bw * .3) + '" y="' + (H - pb - h) + '" width="' + (bw * .6) + '" height="' + h + '" rx="3" fill="var(--accent)"/>' +
+          '<text class="val" x="' + x + '" y="' + (H - pb - h - 4) + '" text-anchor="middle">' + val[i] + suf + "</text>";
+      }
+      s += '<text x="' + x + '" y="' + (H - 6) + '" text-anchor="middle">' + et[i] + "</text>";
+    }
+    return s + "</svg>";
+  }
+  function svgLinea(et, val) {
+    var W = 320, H = 170, pl = 18, pr = 18, pb = 20, pt = 24, n = val.length;
+    var lo = Math.min.apply(null, val), hi = Math.max.apply(null, val);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    var pts = val.map(function (v, i) { return [n > 1 ? pl + i * (W - pl - pr) / (n - 1) : W / 2, pt + (hi - v) / (hi - lo) * (H - pb - pt)]; });
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img"><line x1="0" y1="' + (H - pb) + '" x2="' + W + '" y2="' + (H - pb) + '" stroke="var(--line)"/>' +
+      '<polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="' + pts.map(function (q) { return q.join(","); }).join(" ") + '"/>';
+    pts.forEach(function (q, i) {
+      s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="3.5" fill="var(--accent)"/><text class="val" x="' + q[0] + '" y="' + (q[1] - 8) + '" text-anchor="middle">' + val[i] + "</text>" +
+        '<text x="' + q[0] + '" y="' + (H - 6) + '" text-anchor="middle">' + et[i] + "</text>";
+    });
+    return s + "</svg>";
+  }
+  function semanas(n) {
+    var h = new Date(), lun = new Date(h.getFullYear(), h.getMonth(), h.getDate() - idxSemana(h)), out = [];
+    for (var w = n - 1; w >= 0; w--) {
+      var a = new Date(lun.getFullYear(), lun.getMonth(), lun.getDate() - 7 * w), plan = 0, hecho = 0, suma = 0, nr = 0;
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(a.getFullYear(), a.getMonth(), a.getDate() + i), e = entrenoCli(cliente, d), q = progreso[clave(d)];
+        var t = e && !e.descanso ? (e.ejercicios || []).length : 0;
+        plan += t;
+        if (q) {
+          for (var j = 0; j < t; j++) if (q.hechos && q.hechos[j]) hecho++;
+          if (q.esfuerzo) { suma += q.esfuerzo; nr++; }
+        }
+      }
+      out.push({ et: a.getDate() + "/" + (a.getMonth() + 1), cump: plan ? Math.round(hecho / plan * 100) : null, esf: nr ? Math.round(suma / nr * 10) / 10 : null });
+    }
+    return out;
+  }
+  function pesosPorEjercicio() {
+    var m = {};
+    Object.keys(progreso).sort().forEach(function (k) {
+      var pr = progreso[k]; if (!pr.pesos) return;
+      var q = k.split("-"), e = entrenoCli(cliente, new Date(+q[0], +q[1] - 1, +q[2]));
+      if (!e) return;
+      recorrer(e, function (x, path) {
+        var r = pr.pesos[path], kg = r ? numero(r.kg) : null;
+        if (kg === null || !x.nombre) return;
+        var l = m[x.nombre.trim()] = m[x.nombre.trim()] || [], u = l[l.length - 1];
+        if (u && u.k === k) u.kg = Math.max(u.kg, kg); else l.push({ k: k, kg: kg });
+      });
+    });
+    return m;
+  }
+  function abrirProgreso() {
+    if (!progCargado) { aviso("Aún se está cargando el progreso. Inténtalo en unos segundos.", true); return; }
+    $("progTitulo").textContent = modo === "admin" ? "Progreso de " + cliente.nombre : "Mi progreso";
+    var sm = semanas(8), et = sm.map(function (x) { return x.et; });
+    $("pgCump").innerHTML = svgBarras(et, sm.map(function (x) { return x.cump; }), 100, "%");
+    $("pgEsf").innerHTML = svgBarras(et, sm.map(function (x) { return x.esf; }), 10, "");
+    var pe = pesosPorEjercicio(), s = $("pgEj");
+    var nombres = Object.keys(pe).sort(function (a, b) { return pe[b].length - pe[a].length; });
+    s.textContent = "";
+    nombres.forEach(function (n) { var o = el("option", null, n); o.value = n; s.appendChild(o); });
+    s.hidden = !nombres.length;
+    function dib() {
+      var l = pe[s.value];
+      if (!l) { $("pgPeso").innerHTML = '<p class="vacio">Todavía no hay pesos registrados.</p>'; return; }
+      l = l.slice(-10);
+      $("pgPeso").innerHTML = svgLinea(l.map(function (x) { var q = x.k.split("-"); return +q[2] + "/" + +q[1]; }), l.map(function (x) { return x.kg; }));
+    }
+    s.onchange = dib; dib();
+    $("dlgProg").showModal();
+  }
+  $("btnProg").addEventListener("click", abrirProgreso);
+  $("pgCerrar").addEventListener("click", function () { $("dlgProg").close(); });
+
+  /* ================= Instalar como app ================= */
+  var promptInst = null;
+  var esIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var yaApp = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); promptInst = e; if (!yaApp) $("btnInstalar").hidden = false; });
+  if (esIos && !yaApp) $("btnInstalar").hidden = false;
+  $("btnInstalar").addEventListener("click", function () {
+    if (promptInst) { promptInst.prompt(); promptInst = null; $("btnInstalar").hidden = true; }
+    else aviso("En iPhone: pulsa Compartir (el cuadrado con la flecha) y elige «Añadir a pantalla de inicio».");
+  });
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});
 
   /* ================= Recordar sesión de la pestaña ================= */
   try {
