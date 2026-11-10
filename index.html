@@ -250,12 +250,15 @@
 
   /* ---------- Ajustes de maquetación (editor y lista) ---------- */
   .fila .dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .img-ed { grid-column: 1 / -1; order: 5; }
+  .img-ed { grid-column: 1 / -1; order: 6; }
   .fila .dos > :nth-child(1) { grid-column: 1 / -1; }
   .fila .dos > :nth-child(3) { grid-column: 1 / -1; order: 2; }
-  .fila .dos > :nth-child(2) { order: 3; }
+  .fila .dos > :nth-child(2) { order: 4; }
   .fila .dos > :nth-child(2):last-child { grid-column: 1 / -1; order: 2; }
-  .fila .dos > :nth-child(4) { order: 4; }
+  .fila .dos > :nth-child(4) { order: 5; }
+  .fila .dos > :nth-child(6) { grid-column: 1 / -1; order: 3; }
+  .desc-ed { min-height: 72px; margin: 0; }
+  .desc { margin: 6px 0 0; white-space: pre-line; overflow-wrap: anywhere; font-size: .95rem; }
   .img-ed input[type="file"] { min-width: 0; max-width: 100%; }
   .cols.admin { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
   .clientes { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
@@ -1092,6 +1095,12 @@
     w.appendChild(f); w.appendChild(info); w.appendChild(q);
     return w;
   }
+  function areaTexto(obj, prop, placeholder) {
+    var t = el("textarea", "desc-ed");
+    t.value = obj[prop] || ""; t.placeholder = placeholder;
+    t.addEventListener("input", function () { obj[prop] = t.value; });
+    return t;
+  }
   function filaEjercicio(arr, i, key, sub) {
     var it = arr[i];
     var f = el("div", "fila" + (sub ? " sub" : ""));
@@ -1101,7 +1110,7 @@
     ni.addEventListener("change", function () {
       var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
       if (!a) return;
-      ["familia", "detalle", "video", "imagen"].forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
+      ["familia", "detalle", "video", "imagen"].concat(area === "rehab" ? ["descripcion"] : []).forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
       if (cambio) pintarEditor();
     });
     dos.appendChild(ni);
@@ -1111,6 +1120,7 @@
     dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
     dos.appendChild(campo(it, "video", "Vídeo (enlace)"));
     dos.appendChild(selectorImagen(it));
+    if (area === "rehab") dos.appendChild(areaTexto(it, "descripcion", "Descripción (cómo se hace, precauciones…)"));
     f.appendChild(dos);
     f.appendChild(controles(arr, i));
     return f;
@@ -1236,6 +1246,7 @@
     var r = { nombre: y.nombre.trim(), detalle: (y.detalle || "").trim() };
     if ((y.video || "").trim()) r.video = y.video.trim();
     if ((y.familia || "").trim()) r.familia = y.familia.trim();
+    if ((y.descripcion || "").trim()) r.descripcion = y.descripcion.trim();
     if (y.imagen) r.imagen = y.imagen;
     return r;
   }
@@ -1485,8 +1496,8 @@
     function add(x) {
       if (!x || !x.nombre || !x.nombre.trim()) return;
       var k = x.nombre.trim().toLowerCase(), a = m[k];
-      if (!a) m[k] = { nombre: x.nombre.trim(), detalle: x.detalle || "", video: x.video || "", imagen: x.imagen || "", familia: x.familia || "" };
-      else { a.video = a.video || x.video || ""; a.imagen = a.imagen || x.imagen || ""; a.detalle = a.detalle || x.detalle || ""; a.familia = a.familia || x.familia || ""; }
+      if (!a) m[k] = { nombre: x.nombre.trim(), detalle: x.detalle || "", video: x.video || "", imagen: x.imagen || "", familia: x.familia || "", descripcion: x.descripcion || "" };
+      else { a.video = a.video || x.video || ""; a.imagen = a.imagen || x.imagen || ""; a.detalle = a.detalle || x.detalle || ""; a.familia = a.familia || x.familia || ""; a.descripcion = a.descripcion || x.descripcion || ""; }
     }
     function dia(e) {
       if (!e) return;
@@ -1572,6 +1583,7 @@
           var l2 = el("li");
           l2.appendChild(el("span", "nom", y.nombre));
           if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
+          if (y.descripcion) l2.appendChild(el("p", "desc", y.descripcion));
           l2.appendChild(mediaEj(y));
           sub.appendChild(l2);
         });
@@ -1579,6 +1591,7 @@
       } else {
         li.appendChild(el("span", "nom", e.nombre));
         if (e.detalle) li.appendChild(el("span", "det", e.detalle));
+        if (e.descripcion) li.appendChild(el("p", "desc", e.descripcion));
         li.appendChild(mediaEj(e));
       }
       ul.appendChild(li);
