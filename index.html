@@ -262,6 +262,20 @@
   @media (max-width: 860px) { .cols.admin { grid-template-columns: 1fr; } }
   @media (max-width: 560px) { .fila .dos { grid-template-columns: minmax(0, 1fr); } .clientes { grid-template-columns: 1fr; } }
 
+  /* ---------- Rehabilitación ---------- */
+  .areas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .areas button { padding: 12px; border: 2px solid var(--line); background: var(--card); border-radius: 6px; font-weight: 700; }
+  .areas button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  #vistaCal.rehab { --accent: #1f6fd1; --accent-ink: #ffffff; }
+  @media (prefers-color-scheme: dark) { #vistaCal.rehab { --accent: #6aa9ff; --accent-ink: #0a1b33; } }
+  .sesiones { display: grid; gap: 8px; }
+  .ses { text-align: left; background: var(--card); border: 2px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .ses .nom { font-family: var(--head); font-size: 1.2rem; font-weight: 700; display: block; overflow-wrap: anywhere; }
+  .ses .det { color: var(--muted); font-size: .9rem; }
+  .ses.sel { border-color: var(--accent); }
+  .ses:hover { background: var(--rest); }
+  #rehabCols .cal-head h2 { font-size: 1.7rem; }
+
   /* ---------- Gráficas ---------- */
   dialog { max-height: 92vh; overflow: auto; }
   #dlgProg { max-width: 560px; }
@@ -355,7 +369,11 @@
       <textarea id="msgTexto" placeholder="Ej. Esta semana descargamos un 10 %. Lo verá al entrar hasta que lo elimines."></textarea>
       <button class="btn danger" id="msgBorrar" type="button">Eliminar mensaje</button>
     </div>
-    <div class="cols">
+    <div class="areas" id="areas" hidden>
+      <button type="button" id="areaEntreno" aria-pressed="true">Entrenamiento</button>
+      <button type="button" id="areaRehab" aria-pressed="false">Rehabilitación</button>
+    </div>
+    <div class="cols" id="calCols">
       <section aria-label="Calendario">
         <div class="cal-head">
           <h2 id="mesTitulo"></h2>
@@ -368,6 +386,13 @@
         <div class="grid" id="cal"></div>
       </section>
       <aside class="panel" id="panel"></aside>
+    </div>
+    <div class="cols" id="rehabCols" hidden>
+      <section aria-label="Sesiones de rehabilitación">
+        <div class="cal-head"><h2>Sesiones</h2><button class="btn" id="btnNuevaSesion" type="button" hidden>+ Nueva sesión</button></div>
+        <div class="sesiones" id="listaSesiones"></div>
+      </section>
+      <aside class="panel" id="panelRehab"></aside>
     </div>
   </main>
 </div>
@@ -430,6 +455,14 @@
   <div class="botones"><button class="btn" id="pgCerrar" type="button">Cerrar</button></div>
 </dialog>
 
+<dialog id="dlgCopiaSesion">
+  <h2>Copiar sesión a otro cliente</h2>
+  <label for="csCliente">Cliente</label>
+  <select id="csCliente"></select>
+  <p class="nota">Se añade como una sesión nueva en su zona de rehabilitación. Se copia lo que ves ahora en pantalla.</p>
+  <div class="botones"><button class="btn ghost" id="csCancelar" type="button">Cancelar</button><button class="btn" id="csCopiar" type="button">Copiar</button></div>
+</dialog>
+
 <dialog id="dlgVideo">
   <div class="video-wrap"><iframe id="ytFrame" title="Vídeo del ejercicio" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
   <div class="botones"><a id="ytLink" class="btn ghost" target="_blank" rel="noopener">Abrir en YouTube</a><button class="btn" id="vCerrar" type="button">Cerrar</button></div>
@@ -483,6 +516,8 @@
   var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo} }
   var progCargado = false;
   var progTimer = null;
+  var area = "entreno";        // "entreno" | "rehab"
+  var selR = -1;              // sesión de rehabilitación seleccionada
   var pendientes = {};        // imágenes elegidas que se suben al publicar
 
   var $ = function (id) { return document.getElementById(id); };
@@ -651,7 +686,7 @@
     $("btnAtras").hidden = !(modo === "admin" && v === "cal");
     $("btnPdf").hidden = (modo !== "cliente");
     $("btnProg").hidden = !(v === "cal" && fbConf());
-    document.querySelector("#vistaCal .cols").classList.toggle("admin", modo === "admin");
+    document.querySelectorAll("#vistaCal .cols").forEach(function (c) { c.classList.toggle("admin", modo === "admin"); });
     if (modo === "admin") $("titulo").textContent = v === "cal" ? cliente.nombre : "Mis clientes";
     else $("titulo").textContent = "Hola, " + cliente.nombre;
   }
@@ -706,7 +741,7 @@
   }
 
   $("btnAtras").addEventListener("click", function () {
-    cliente = null; borrador = null;
+    cliente = null; borrador = null; area = "entreno"; selR = -1;
     mostrarVista("clientes");
     pintarClientes();
   });
@@ -757,8 +792,10 @@
   function abrirCalendario() {
     var h = new Date();
     vista = new Date(h.getFullYear(), h.getMonth(), 1);
+    area = "entreno"; selR = -1;
     mostrarVista("cal");
     pintarMensaje();
+    pintarAreas();
     seleccionar(new Date(h.getFullYear(), h.getMonth(), h.getDate()));
     var c = cliente;
     cargarProgreso(c, function () {
@@ -1102,6 +1139,7 @@
   }
 
   function pintarEditor() {
+    if (area === "rehab") { pintarEditorRehab(); return; }
     var p = $("panel");
     p.textContent = "";
     var f = seleccionado;
@@ -1201,7 +1239,7 @@
     if (y.imagen) r.imagen = y.imagen;
     return r;
   }
-  function limpiar(b) {
+  function limpiar(b, rehab) {
     var res = { titulo: (b.titulo || "").trim(), ejercicios: [] };
     var notas = (b.notas || "").trim();
     if (notas) res.notas = notas;
@@ -1223,8 +1261,8 @@
         res.ejercicios.push(copiaEj(it));
       }
     });
-    if (!res.ejercicios.length) return null;
-    if (!res.titulo) res.titulo = "Entrenamiento";
+    if (!res.ejercicios.length && !(rehab && (res.notas || res.titulo))) return null;
+    if (!res.titulo) res.titulo = rehab ? "Sesión de rehabilitación" : "Entrenamiento";
     return res;
   }
 
@@ -1455,11 +1493,185 @@
       (e.ejercicios || []).forEach(function (x) { if (x.tipo === "circuito") (x.ejercicios || []).forEach(add); else add(x); });
     }
     DATOS.clientes.forEach(function (c) {
+      (c.rehab || []).forEach(dia);
       for (var a in c.semanal || {}) dia(c.semanal[a]);
       for (var b in c.dias || {}) dia(c.dias[b]);
     });
     return m;
   }
+
+  /* ================= Rehabilitación: sesiones ================= */
+  function sesiones(c) { c.rehab = c.rehab || []; return c.rehab; }
+  function tieneRehab(c) { return !!(c && c.rehab && c.rehab.length); }
+  function cuentaEj(x) { var n = 0; (x.ejercicios || []).forEach(function (e) { n += e.tipo === "circuito" ? (e.ejercicios || []).length : 1; }); return n; }
+  function pintarAreas() {
+    $("areas").hidden = !(modo === "admin" || tieneRehab(cliente));
+    $("areaEntreno").setAttribute("aria-pressed", String(area === "entreno"));
+    $("areaRehab").setAttribute("aria-pressed", String(area === "rehab"));
+    $("calCols").hidden = (area !== "entreno");
+    $("rehabCols").hidden = (area !== "rehab");
+    $("vistaCal").classList.toggle("rehab", area === "rehab");
+  }
+  function cambiarArea(a) {
+    if (a === area) return;
+    area = a; borrador = null; selR = -1;
+    pintarAreas();
+    if (a === "rehab") {
+      pintarListaSesiones();
+      if ((cliente.rehab || []).length) seleccionarSesion(0); else pintarPanelRehab();
+    } else seleccionar(seleccionado || new Date());
+  }
+  $("areaEntreno").addEventListener("click", function () { cambiarArea("entreno"); });
+  $("areaRehab").addEventListener("click", function () { cambiarArea("rehab"); });
+
+  function pintarListaSesiones() {
+    var c = $("listaSesiones"), l = cliente.rehab || [];
+    c.textContent = "";
+    $("btnNuevaSesion").hidden = (modo !== "admin");
+    if (!l.length) c.appendChild(el("p", "vacio", modo === "admin" ? "Todavía no hay sesiones. Crea la primera con «+ Nueva sesión»." : "No tienes sesiones."));
+    l.forEach(function (x, i) {
+      var b = el("button", "ses" + (i === selR ? " sel" : "")); b.type = "button";
+      b.appendChild(el("span", "nom", x.titulo || "Sesión " + (i + 1)));
+      var n = cuentaEj(x);
+      b.appendChild(el("span", "det", n ? n + (n === 1 ? " ejercicio" : " ejercicios") : "Sin ejercicios"));
+      b.addEventListener("click", function () { seleccionarSesion(i); });
+      c.appendChild(b);
+    });
+  }
+  function seleccionarSesion(i) {
+    selR = i;
+    borrador = modo === "admin" ? clonar(cliente.rehab[i]) : null;
+    pintarListaSesiones();
+    pintarPanelRehab();
+  }
+  function pintarPanelRehab() {
+    if (modo === "admin") pintarEditorRehab(); else pintarVistaSesion();
+  }
+  $("btnNuevaSesion").addEventListener("click", function () {
+    selR = (cliente.rehab || []).length;
+    borrador = { titulo: "", notas: "", ejercicios: [] };
+    pintarListaSesiones();
+    pintarEditorRehab();
+  });
+
+  function pintarVistaSesion() {
+    var p = $("panelRehab"), x = (cliente.rehab || [])[selR];
+    p.textContent = "";
+    if (!x) { p.appendChild(el("p", "vacio", "Elige una sesión de la lista.")); return; }
+    p.appendChild(el("h3", null, x.titulo || "Sesión de rehabilitación"));
+    if (x.notas) p.appendChild(el("p", "notas", x.notas));
+    var ul = el("ul", "ejercicios");
+    (x.ejercicios || []).forEach(function (e) {
+      var li = el("li");
+      if (e.tipo === "circuito") {
+        var box = el("div", "circuito");
+        box.appendChild(el("span", "cab", e.nombre || "Circuito"));
+        if (e.detalle) box.appendChild(el("span", "info", e.detalle));
+        var sub = el("ul");
+        (e.ejercicios || []).forEach(function (y) {
+          var l2 = el("li");
+          l2.appendChild(el("span", "nom", y.nombre));
+          if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
+          l2.appendChild(mediaEj(y));
+          sub.appendChild(l2);
+        });
+        box.appendChild(sub); li.appendChild(box);
+      } else {
+        li.appendChild(el("span", "nom", e.nombre));
+        if (e.detalle) li.appendChild(el("span", "det", e.detalle));
+        li.appendChild(mediaEj(e));
+      }
+      ul.appendChild(li);
+    });
+    p.appendChild(ul);
+  }
+
+  function pintarEditorRehab() {
+    var p = $("panelRehab");
+    p.textContent = "";
+    if (selR < 0 || !borrador) { p.appendChild(el("p", "vacio", "Elige una sesión de la lista o crea una nueva.")); return; }
+    var dl = el("datalist"), dlf = el("datalist"), bib = biblioteca(), fs = {};
+    dl.id = "dlEj"; dlf.id = "dlFam";
+    Object.keys(bib).forEach(function (k) {
+      var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o);
+      if (bib[k].familia) fs[bib[k].familia.toLowerCase()] = bib[k].familia;
+    });
+    Object.keys(fs).forEach(function (k) { var o = el("option"); o.value = fs[k]; dlf.appendChild(o); });
+    p.appendChild(dl); p.appendChild(dlf);
+
+    var lt = el("label", null, "Título de la sesión"); lt.setAttribute("for", "rTitulo");
+    var ti = campo(borrador, "titulo", "Ej. Rehabilitación de hombro"); ti.id = "rTitulo";
+    p.appendChild(lt); p.appendChild(ti);
+    var ln = el("label", null, "Notas de la sesión (qué se ha hecho, indicaciones)"); ln.setAttribute("for", "rNotas");
+    var ta = el("textarea"); ta.id = "rNotas"; ta.value = borrador.notas || "";
+    ta.placeholder = "Ej. Terapia manual y movilidad. Parar si el dolor pasa de 4/10.";
+    ta.addEventListener("input", function () { borrador.notas = ta.value; });
+    p.appendChild(ln); p.appendChild(ta);
+
+    p.appendChild(el("p", "editor-h", "Ejercicios"));
+    borrador.ejercicios.forEach(function (it, i) {
+      p.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
+    });
+    var ac = el("div", "acciones");
+    var b1 = el("button", "btn ghost", "+ Añadir ejercicio"); b1.type = "button";
+    b1.addEventListener("click", function () { borrador.ejercicios.push({ nombre: "", detalle: "" }); enfocar = String(borrador.ejercicios.length - 1); pintarEditorRehab(); });
+    var b2 = el("button", "btn ghost", "+ Añadir circuito"); b2.type = "button";
+    b2.addEventListener("click", function () {
+      borrador.ejercicios.push({ tipo: "circuito", nombre: "Circuito", detalle: "", ejercicios: [{ nombre: "", detalle: "" }, { nombre: "", detalle: "" }] });
+      enfocar = (borrador.ejercicios.length - 1) + ".0"; pintarEditorRehab();
+    });
+    ac.appendChild(b1); ac.appendChild(b2); p.appendChild(ac);
+    p.appendChild(el("hr", "sep"));
+
+    var g = el("div", "guardar");
+    var bg = el("button", "btn", "Guardar sesión"); bg.type = "button"; bg.addEventListener("click", guardarSesion);
+    var bc = el("button", "btn ghost", "Copiar a otro cliente"); bc.type = "button"; bc.addEventListener("click", abrirCopiaSesion);
+    g.appendChild(bg); g.appendChild(bc);
+    if (selR < (cliente.rehab || []).length) {
+      var bd = el("button", "btn danger", "Eliminar sesión"); bd.type = "button"; bd.addEventListener("click", eliminarSesion);
+      g.appendChild(bd);
+    }
+    p.appendChild(g);
+    if (enfocar !== null) {
+      var q = p.querySelector('[data-key="' + enfocar + '"]');
+      enfocar = null;
+      if (q) q.focus();
+    }
+  }
+  function guardarSesion() {
+    var lim = limpiar(borrador, true);
+    if (!lim) { aviso("Escribe al menos un título, unas notas o un ejercicio.", true); return; }
+    delete lim.descanso;
+    sesiones(cliente)[selR] = lim;
+    marcarSucio();
+    borrador = clonar(lim);
+    pintarListaSesiones(); pintarEditorRehab();
+    aviso("Sesión guardada. Pulsa «Publicar cambios» para que el cliente la vea.");
+  }
+  function eliminarSesion() {
+    if (!confirm("¿Eliminar esta sesión?")) return;
+    sesiones(cliente).splice(selR, 1);
+    marcarSucio();
+    selR = -1; borrador = null;
+    pintarListaSesiones(); pintarEditorRehab();
+  }
+  function abrirCopiaSesion() {
+    var s = $("csCliente"); s.textContent = "";
+    DATOS.clientes.forEach(function (c, i) { if (c !== cliente) { var o = el("option", null, c.nombre); o.value = i; s.appendChild(o); } });
+    if (!s.children.length) { aviso("No tienes más clientes a los que copiar.", true); return; }
+    $("dlgCopiaSesion").showModal();
+  }
+  $("csCancelar").addEventListener("click", function () { $("dlgCopiaSesion").close(); });
+  $("csCopiar").addEventListener("click", function () {
+    var lim = limpiar(borrador, true);
+    if (!lim) { aviso("Escribe al menos un título, unas notas o un ejercicio.", true); return; }
+    delete lim.descanso;
+    var dst = DATOS.clientes[+$("csCliente").value];
+    sesiones(dst).push(lim);
+    marcarSucio();
+    $("dlgCopiaSesion").close();
+    aviso("Copiada a " + dst.nombre + ". Recuerda pulsar «Publicar cambios».");
+  });
 
   /* ================= Copiar días / semanas ================= */
   function entrenoCli(c, d) {
