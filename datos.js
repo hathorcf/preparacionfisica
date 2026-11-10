@@ -279,6 +279,15 @@ var DATOS = {
           ]
         }
       }
+    },
+    {
+      "id": "mwamtikc9z6q",
+      "usuario": "chyolin",
+      "clave": "chyo123",
+      "nombre": "Chyolin",
+      "semanal": {},
+      "dias": {},
+      "mensaje": ""
     }
   ],
   "firebase": {
