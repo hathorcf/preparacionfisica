@@ -287,7 +287,148 @@ var DATOS = {
       "nombre": "Chyolin",
       "semanal": {},
       "dias": {},
-      "mensaje": ""
+      "mensaje": "",
+      "rehab": [
+        {
+          "titulo": "Semana 1 y 2: fortalecimiento zona cervical",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "Movilidad torácica",
+              "detalle": "2 series de cada ejercicio",
+              "ejercicios": [
+                {
+                  "nombre": "Extensión torácica sobre foam roller",
+                  "detalle": "x8 reps por zona, 2 zonas",
+                  "video": "https://youtu.be/3jB90WP7HjQ",
+                  "familia": "Movilidad",
+                  "descripcion": "Boca arriba, rodillo a nivel dorsal medio-alto, manos tras la nuca (apoyando la cabeza) y extensión suave sobre el rodillo. Ir cambiando de zona."
+                },
+                {
+                  "nombre": "Libro abierto",
+                  "detalle": "x8 reps por lado",
+                  "video": "https://www.youtube.com/shorts/cncdlzYmbxg?feature=share",
+                  "familia": "Movilidad",
+                  "descripcion": "De lado, caderas y rodillas a 90º con los brazos extendidos al frente. Rotar el brazo superior hacia atrás siguiendo la mano con la mirada, acompañando con la respiración."
+                },
+                {
+                  "nombre": "Thread the needle",
+                  "detalle": "x8 reps por lado",
+                  "video": "https://www.youtube.com/shorts/h6_v-dZGLjY?feature=share",
+                  "familia": "Movilidad",
+                  "descripcion": "En posición de cuadrupedia, pasar un brazo por debajo del otro rotando el tronco, y luego abrirlo hacia el techo."
+                },
+                {
+                  "nombre": "Gato/camello",
+                  "detalle": "x8 reps",
+                  "video": "https://youtu.be/ZiC_9Yp5A68",
+                  "familia": "Movilidad",
+                  "descripcion": "En posición de cuadrupedia, mover principalmente desde la zona torácica, no lumbar."
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "Movilidad cervical",
+              "detalle": "2 series de cada ejercicio",
+              "ejercicios": [
+                {
+                  "nombre": "Retracción cervical",
+                  "detalle": "x8 reps, manteniendo 3s",
+                  "video": "https://youtu.be/fcMWc-9Hijw",
+                  "familia": "Movilidad",
+                  "descripcion": "Boca arriba, llevar el mentón hacia atrás sin flexionar el cuello."
+                },
+                {
+                  "nombre": "Flexión-extensión cervical",
+                  "detalle": "x8 reps, manteniendo 3 s",
+                  "familia": "Movilidad",
+                  "descripcion": "De rodillas, cerca de una pared y apoyando la cabeza en el fitball. Realizas una flexión-extensión cervical (el fitball se mueve arriba-abajo)",
+                  "imagen": "imagenes/mwao0aqeyrd.jpg"
+                },
+                {
+                  "nombre": "Rotación cervical",
+                  "detalle": "x8 reps, manteniendo 3 s",
+                  "familia": "Movilidad",
+                  "descripcion": "De rodillas, cerca de una pared y apoyando la cabeza en el fitball. Realizas una rotación cervical (el fitball se mueve derecha-izquierda)",
+                  "imagen": "imagenes/mwao1n6y41h.jpg"
+                }
+              ]
+            },
+            {
+              "nombre": "Remo en polea baja",
+              "detalle": "3x10/lado",
+              "video": "https://www.youtube.com/shorts/T_EChQwqWdc?feature=share",
+              "familia": "Espalda",
+              "descripcion": "Las escápulas deben estar atrás y abajo. No encoger los hombros y que no se vayan hacia delante. No sacar \"chepa\"."
+            },
+            {
+              "nombre": "Rotación externa con goma",
+              "detalle": "3x10/lado",
+              "video": "https://youtu.be/wQdfeB80fqo",
+              "familia": "Hombro",
+              "descripcion": "De pie o tumbado boca arriba, utilizando una banda elástica."
+            },
+            {
+              "nombre": "Face pull en posición de caballero",
+              "detalle": "3x10",
+              "video": "https://www.youtube.com/shorts/I41wK3wTZlo?feature=share",
+              "familia": "Hombro",
+              "descripcion": "Una pierna flexionada y la otra con la rodilla apoyada en el suelo, frente a una polea."
+            },
+            {
+              "nombre": "Prono Y-T-W",
+              "detalle": "2x10/letra",
+              "video": "https://www.youtube.com/shorts/hZYrNpk-Glo?feature=share",
+              "familia": "Hombro",
+              "descripcion": "Boca abajo en una colchoneta, debes utilizar un peso ligero (0,5-1 kg) en cada mano. Debes elevar los brazos formando cada letra mientras sujetas las mancuernas. No pierdas la posición de escápulas y hombros. Te adjunto un vídeo de la letra W."
+            },
+            {
+              "nombre": "Puente de cuello isométrico",
+              "detalle": "3x10s",
+              "video": "https://www.youtube.com/shorts/ab_CyIDo1yE?feature=share",
+              "familia": "Espalda",
+              "descripcion": "Puedes hacerlo poniendo el cuello en el suelo o en un fitball. Subes la cadera formando un puente glúteo, pero apoyando en la zona cervical."
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "Estiramientos",
+              "detalle": "2 series de cada ejercicio",
+              "ejercicios": [
+                {
+                  "nombre": "Pectoral mayor",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/tYzta3hjk1I?feature=share",
+                  "familia": "Estiramiento",
+                  "descripcion": "Antebrazo apoyado en el marco, codo a 90°, paso adelante y rotación suave del tronco al lado contrario. Variar la altura del codo (90°, 120°, 150°) para trabajar distintas fibras."
+                },
+                {
+                  "nombre": "Pectoral menor",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/F0BS9mB1eN0?feature=share",
+                  "familia": "Estiramiento",
+                  "descripcion": "Mano apoyada en la pared con el brazo a unos 120-135° (por encima de la cabeza), rotar el tronco alejándose. Mantener el hombro hacia atrás y abajo."
+                },
+                {
+                  "nombre": "Dorsal ancho",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/YaUmyBHs-9A?feature=share",
+                  "familia": "Estiramiento",
+                  "descripcion": "Posición de plegaria, brazos extendidos, desplazar las manos hacia un lado para enfatizar cada dorsal."
+                },
+                {
+                  "nombre": "Estiramientos cervicales",
+                  "detalle": "x30s cada uno",
+                  "video": "https://youtu.be/stQ4yI44Law",
+                  "familia": "Estiramientos",
+                  "descripcion": "Observa el siguiente vídeo. Dos estiramientos: min 1 a 1:27, y del 1:27 al 2.\nEn el primero, inclinación del cuello. En el segundo, inclinación+rotación."
+                }
+              ]
+            }
+          ],
+          "notas": "Movilidad torácica y cervical. Fortalecimiento de musculatura correspondiente y estiramientos de cadena anterior."
+        }
+      ]
     }
   ],
   "firebase": {
