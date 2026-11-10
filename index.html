@@ -248,6 +248,20 @@
     #aviso { font-size: .9rem; }
   }
 
+  /* ---------- Ajustes de maquetación (editor y lista) ---------- */
+  .fila .dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .img-ed { grid-column: 1 / -1; order: 5; }
+  .fila .dos > :nth-child(1) { grid-column: 1 / -1; }
+  .fila .dos > :nth-child(3) { grid-column: 1 / -1; order: 2; }
+  .fila .dos > :nth-child(2) { order: 3; }
+  .fila .dos > :nth-child(2):last-child { grid-column: 1 / -1; order: 2; }
+  .fila .dos > :nth-child(4) { order: 4; }
+  .img-ed input[type="file"] { min-width: 0; max-width: 100%; }
+  .cols.admin { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+  .clientes { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  @media (max-width: 860px) { .cols.admin { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .fila .dos { grid-template-columns: minmax(0, 1fr); } .clientes { grid-template-columns: 1fr; } }
+
   /* ---------- Gráficas ---------- */
   dialog { max-height: 92vh; overflow: auto; }
   #dlgProg { max-width: 560px; }
@@ -256,6 +270,10 @@
   .graf text { fill: var(--muted); font-size: 9px; font-family: var(--body); }
   .graf text.val { fill: var(--ink); font-weight: 700; }
   #dlgProg select { margin: 4px 0 10px; }
+  .vars { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 8px; }
+  .vars label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; font-size: .85rem; }
+  .vars input { width: 18px; height: 18px; margin: 0; }
+  .vars .sw { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
 
   /* ---------- Registro de pesos ---------- */
   .item > div { min-width: 0; }
@@ -326,13 +344,17 @@
       <p id="contador"></p>
       <button class="btn" id="btnNuevo" type="button">Nuevo cliente</button>
     </div>
-    <div class="msg-box"><label for="msgGlobal">Mensaje para todos los clientes (opcional)</label><textarea id="msgGlobal" placeholder="Ej. Esta semana descargamos un 10 %."></textarea></div>
     <div class="clientes" id="listaClientes"></div>
   </main>
 
   <!-- Calendario + panel -->
   <main class="vista" id="vistaCal" hidden>
     <div id="bannerMsg" class="banner" hidden></div>
+    <div class="msg-box" id="msgAdmin" hidden>
+      <label for="msgTexto">Mensaje para este cliente</label>
+      <textarea id="msgTexto" placeholder="Ej. Esta semana descargamos un 10 %. Lo verá al entrar hasta que lo elimines."></textarea>
+      <button class="btn danger" id="msgBorrar" type="button">Eliminar mensaje</button>
+    </div>
     <div class="cols">
       <section aria-label="Calendario">
         <div class="cal-head">
@@ -359,8 +381,6 @@
   <input id="cUsuario" autocapitalize="none">
   <label for="cClave">Contraseña</label>
   <input id="cClave">
-  <label for="cMensaje">Mensaje solo para este cliente (opcional)</label>
-  <textarea id="cMensaje"></textarea>
   <p class="error" id="cError" role="alert"></p>
   <div class="botones">
     <button class="btn danger" id="cEliminar" type="button">Eliminar</button>
@@ -405,6 +425,7 @@
   <div class="graf" id="pgEsf"></div>
   <h3>Peso por ejercicio</h3>
   <select id="pgEj"></select>
+  <div id="pgVar" class="vars"></div>
   <div class="graf" id="pgPeso"></div>
   <div class="botones"><button class="btn" id="pgCerrar" type="button">Cerrar</button></div>
 </dialog>
@@ -630,6 +651,7 @@
     $("btnAtras").hidden = !(modo === "admin" && v === "cal");
     $("btnPdf").hidden = (modo !== "cliente");
     $("btnProg").hidden = !(v === "cal" && fbConf());
+    document.querySelector("#vistaCal .cols").classList.toggle("admin", modo === "admin");
     if (modo === "admin") $("titulo").textContent = v === "cal" ? cliente.nombre : "Mis clientes";
     else $("titulo").textContent = "Hola, " + cliente.nombre;
   }
@@ -661,7 +683,6 @@
   function pintarClientes() {
     var cont = $("listaClientes");
     cont.textContent = "";
-    $("msgGlobal").value = DATOS.mensaje || "";
     var n = DATOS.clientes.length;
     $("contador").textContent = n === 0 ? "Aún no tienes clientes." : n + (n === 1 ? " cliente" : " clientes");
     DATOS.clientes.forEach(function (c) {
@@ -690,7 +711,6 @@
     pintarClientes();
   });
   $("btnNuevo").addEventListener("click", function () { abrirDialogoCliente(null); });
-  $("msgGlobal").addEventListener("input", function () { DATOS.mensaje = this.value; marcarSucio(); });
 
   /* ---------- Diálogo cliente ---------- */
   var editando = null;
@@ -700,7 +720,6 @@
     $("cNombre").value = c ? c.nombre : "";
     $("cUsuario").value = c ? c.usuario : "";
     $("cClave").value = c ? c.clave : "";
-    $("cMensaje").value = c ? (c.mensaje || "") : "";
     $("cError").textContent = "";
     $("cEliminar").hidden = !c;
     $("dlgCliente").showModal();
@@ -716,10 +735,10 @@
     if (repetido) { $("cError").textContent = "Ya existe otro cliente con ese usuario."; return; }
     if (editando) {
       if (!editando.id) editando.id = idProg(editando);
-      editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass; editando.mensaje = $("cMensaje").value.trim();
+      editando.nombre = nombre; editando.usuario = usuario; editando.clave = pass;
     } else {
       DATOS.clientes.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {}, mensaje: $("cMensaje").value.trim() });
+        usuario: usuario, clave: pass, nombre: nombre, semanal: {}, dias: {} });
     }
     marcarSucio();
     $("dlgCliente").close();
@@ -1045,12 +1064,15 @@
     ni.addEventListener("change", function () {
       var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
       if (!a) return;
-      ["detalle", "video", "imagen"].forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
+      ["familia", "detalle", "video", "imagen"].forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
       if (cambio) pintarEditor();
     });
     dos.appendChild(ni);
+    var fi = campo(it, "familia", "Familia");
+    fi.setAttribute("list", "dlFam");
+    dos.appendChild(fi);
     dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
-    dos.appendChild(campo(it, "video", "Enlace de YouTube (opcional)"));
+    dos.appendChild(campo(it, "video", "Vídeo (enlace)"));
     dos.appendChild(selectorImagen(it));
     f.appendChild(dos);
     f.appendChild(controles(arr, i));
@@ -1088,6 +1110,10 @@
     var dl = el("datalist"); dl.id = "dlEj"; var bib = biblioteca();
     Object.keys(bib).forEach(function (k) { var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o); });
     p.appendChild(dl);
+    var dlf = el("datalist"), fs = {}; dlf.id = "dlFam";
+    Object.keys(bib).forEach(function (k) { var fm = bib[k].familia; if (fm) fs[fm.toLowerCase()] = fm; });
+    Object.keys(fs).forEach(function (k) { var o = el("option"); o.value = fs[k]; dlf.appendChild(o); });
+    p.appendChild(dlf);
     var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
@@ -1171,6 +1197,7 @@
   function copiaEj(y) {
     var r = { nombre: y.nombre.trim(), detalle: (y.detalle || "").trim() };
     if ((y.video || "").trim()) r.video = y.video.trim();
+    if ((y.familia || "").trim()) r.familia = y.familia.trim();
     if (y.imagen) r.imagen = y.imagen;
     return r;
   }
@@ -1373,10 +1400,17 @@
 
   /* ================= Mensajes, resumen y biblioteca ================= */
   function pintarMensaje() {
-    var b = $("bannerMsg"), t = [];
-    if (modo === "cliente") { if (DATOS.mensaje) t.push(DATOS.mensaje); if (cliente.mensaje) t.push(cliente.mensaje); }
-    b.textContent = t.join("\n\n"); b.hidden = !t.length;
+    var b = $("bannerMsg"), t = (cliente && cliente.mensaje || "").trim();
+    b.textContent = modo === "cliente" ? t : ""; b.hidden = !(modo === "cliente" && t);
+    $("msgAdmin").hidden = (modo !== "admin");
+    if (modo === "admin") $("msgTexto").value = (cliente && cliente.mensaje) || "";
   }
+  $("msgTexto").addEventListener("input", function () { cliente.mensaje = this.value; marcarSucio(); });
+  $("msgBorrar").addEventListener("click", function () {
+    if (!cliente || !(cliente.mensaje || "").trim()) return;
+    cliente.mensaje = ""; $("msgTexto").value = ""; marcarSucio();
+    aviso("Mensaje eliminado. Pulsa «Publicar cambios» para que deje de verlo.");
+  });
   function resumen(c, res) {
     fetch(urlProg(c) + "?key=" + encodeURIComponent(DATOS.firebase.apiKey)).then(function (r) {
       if (r.status === 404) return {};
@@ -1413,8 +1447,8 @@
     function add(x) {
       if (!x || !x.nombre || !x.nombre.trim()) return;
       var k = x.nombre.trim().toLowerCase(), a = m[k];
-      if (!a) m[k] = { nombre: x.nombre.trim(), detalle: x.detalle || "", video: x.video || "", imagen: x.imagen || "" };
-      else { a.video = a.video || x.video || ""; a.imagen = a.imagen || x.imagen || ""; a.detalle = a.detalle || x.detalle || ""; }
+      if (!a) m[k] = { nombre: x.nombre.trim(), detalle: x.detalle || "", video: x.video || "", imagen: x.imagen || "", familia: x.familia || "" };
+      else { a.video = a.video || x.video || ""; a.imagen = a.imagen || x.imagen || ""; a.detalle = a.detalle || x.detalle || ""; a.familia = a.familia || x.familia || ""; }
     }
     function dia(e) {
       if (!e) return;
@@ -1616,6 +1650,33 @@
     }
     return out;
   }
+  var COLS = ["var(--accent)", "#e4572e", "#7b61ff", "#d99a00", "#2f9e44", "#0aa5c0"];
+  var DASH = ["none", "6 4", "2 4", "8 3 2 3", "10 3", "1 0"];
+  function svgLineas(series) {
+    var fechas = [], vals = [];
+    series.forEach(function (se) { se.l.forEach(function (q) { if (fechas.indexOf(q.k) < 0) fechas.push(q.k); }); });
+    fechas.sort(); fechas = fechas.slice(-10);
+    series.forEach(function (se) { se.l.forEach(function (q) { if (fechas.indexOf(q.k) >= 0) vals.push(q.kg); }); });
+    if (!vals.length) return '<p class="vacio">Marca al menos una variante.</p>';
+    var W = 320, H = 180, pl = 18, pr = 22, pb = 20, pt = 24, n = fechas.length;
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    function X(k) { return n > 1 ? pl + fechas.indexOf(k) * (W - pl - pr) / (n - 1) : W / 2; }
+    function Y(v) { return pt + (hi - v) / (hi - lo) * (H - pb - pt); }
+    var o = '<svg viewBox="0 0 ' + W + " " + H + '" role="img"><line x1="0" y1="' + (H - pb) + '" x2="' + W + '" y2="' + (H - pb) + '" stroke="var(--line)"/>';
+    fechas.forEach(function (k) { var z = k.split("-"); o += '<text x="' + X(k) + '" y="' + (H - 6) + '" text-anchor="middle">' + +z[2] + "/" + +z[1] + "</text>"; });
+    series.forEach(function (se) {
+      var pts = se.l.filter(function (q) { return fechas.indexOf(q.k) >= 0; });
+      if (!pts.length) return;
+      var c = COLS[se.ci % 6];
+      o += '<polyline fill="none" stroke="' + c + '" stroke-width="2.5" stroke-dasharray="' + DASH[se.ci % 6] + '" points="' + pts.map(function (q) { return X(q.k) + "," + Y(q.kg); }).join(" ") + '"/>';
+      pts.forEach(function (q, i) {
+        o += '<circle cx="' + X(q.k) + '" cy="' + Y(q.kg) + '" r="3.5" fill="' + c + '"/>';
+        if (series.length === 1 || i === pts.length - 1) o += '<text class="val" x="' + X(q.k) + '" y="' + (Y(q.kg) - 8) + '" text-anchor="middle">' + q.kg + "</text>";
+      });
+    });
+    return o + "</svg>";
+  }
   function pesosPorEjercicio() {
     var m = {};
     Object.keys(progreso).sort().forEach(function (k) {
@@ -1625,8 +1686,10 @@
       recorrer(e, function (x, path) {
         var r = pr.pesos[path], kg = r ? numero(r.kg) : null;
         if (kg === null || !x.nombre) return;
-        var l = m[x.nombre.trim()] = m[x.nombre.trim()] || [], u = l[l.length - 1];
-        if (u && u.k === k) u.kg = Math.max(u.kg, kg); else l.push({ k: k, kg: kg });
+        var nom = x.nombre.trim(), fam = (x.familia || "").trim() || nom, fk = fam.toLowerCase(), vk = nom.toLowerCase();
+        var f = m[fk] = m[fk] || { n: fam, v: {} };
+        var v = f.v[vk] = f.v[vk] || { n: nom, l: [] }, u = v.l[v.l.length - 1];
+        if (u && u.k === k) u.kg = Math.max(u.kg, kg); else v.l.push({ k: k, kg: kg });
       });
     });
     return m;
@@ -1638,15 +1701,27 @@
     $("pgCump").innerHTML = svgBarras(et, sm.map(function (x) { return x.cump; }), 100, "%");
     $("pgEsf").innerHTML = svgBarras(et, sm.map(function (x) { return x.esf; }), 10, "");
     var pe = pesosPorEjercicio(), s = $("pgEj");
-    var nombres = Object.keys(pe).sort(function (a, b) { return pe[b].length - pe[a].length; });
+    function total(f) { var t = 0; Object.keys(f.v).forEach(function (k) { t += f.v[k].l.length; }); return t; }
+    var fams = Object.keys(pe).sort(function (a, b) { return total(pe[b]) - total(pe[a]); });
     s.textContent = "";
-    nombres.forEach(function (n) { var o = el("option", null, n); o.value = n; s.appendChild(o); });
-    s.hidden = !nombres.length;
+    fams.forEach(function (k) {
+      var nv = Object.keys(pe[k].v).length;
+      var o = el("option", null, pe[k].n + (nv > 1 ? " (" + nv + " variantes)" : "")); o.value = k; s.appendChild(o);
+    });
+    s.hidden = !fams.length;
     function dib() {
-      var l = pe[s.value];
-      if (!l) { $("pgPeso").innerHTML = '<p class="vacio">Todavía no hay pesos registrados.</p>'; return; }
-      l = l.slice(-10);
-      $("pgPeso").innerHTML = svgLinea(l.map(function (x) { var q = x.k.split("-"); return +q[2] + "/" + +q[1]; }), l.map(function (x) { return x.kg; }));
+      var f = pe[s.value], cont = $("pgVar"); cont.textContent = "";
+      if (!f) { $("pgPeso").innerHTML = '<p class="vacio">Todavía no hay pesos registrados.</p>'; return; }
+      var vs = Object.keys(f.v).map(function (k) { return f.v[k]; }).sort(function (a, b) { return b.l.length - a.l.length; });
+      vs.forEach(function (v, i) { v.ci = i; v.on = i < 5; });
+      function pintar() { $("pgPeso").innerHTML = svgLineas(vs.filter(function (v) { return v.on; })); }
+      if (vs.length > 1) vs.forEach(function (v) {
+        var l = el("label"), c = el("input"); c.type = "checkbox"; c.checked = v.on;
+        var sw = el("span", "sw"); sw.style.background = COLS[v.ci % 6];
+        c.addEventListener("change", function () { v.on = c.checked; pintar(); });
+        l.appendChild(c); l.appendChild(sw); l.appendChild(document.createTextNode(v.n)); cont.appendChild(l);
+      });
+      pintar();
     }
     s.onchange = dib; dib();
     $("dlgProg").showModal();
