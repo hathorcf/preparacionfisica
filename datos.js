@@ -429,6 +429,88 @@ var DATOS = {
           "notas": "Movilidad torácica y cervical. Fortalecimiento de musculatura correspondiente y estiramientos de cadena anterior."
         }
       ]
+    },
+    {
+      "id": "mwdsgvba5ycw",
+      "usuario": "carmenftm",
+      "clave": "carmen123",
+      "nombre": "Carmen",
+      "semanal": {},
+      "dias": {
+        "2026-11-14": {
+          "titulo": "MMII",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hip thrust con barra",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/rVMsqygXtG4?si=D_8fGlzDqQrKdsr3",
+                  "familia": "Isquio"
+                },
+                {
+                  "nombre": "Drop jump + 2 saltos horizontales",
+                  "detalle": "x3",
+                  "video": "https://youtube.com/shorts/oTzM1xerX8Q?si=nkbjWq1GEX-x6gT3",
+                  "familia": "Pliometría"
+                },
+                {
+                  "nombre": "Step up con barra",
+                  "detalle": "x6/pierna",
+                  "video": "https://youtube.com/shorts/AS5A0jk9SrA?si=77bkKcypFkX7TI-J",
+                  "familia": "Isquio"
+                },
+                {
+                  "nombre": "Landmine twist",
+                  "detalle": "x10/lado",
+                  "video": "https://youtube.com/shorts/-iEsKYDdi0E?si=J2N1ubfHzHU5ZQjx",
+                  "familia": "Core"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla en hexagonal",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/JfhNkNz59lI?si=sw2BjajrflQXCp0_",
+                  "familia": "Cuádriceps"
+                },
+                {
+                  "nombre": "Drop jump + 3 saltos verticales",
+                  "detalle": "x3",
+                  "video": "https://youtube.com/shorts/kZSqQtL0l-Y?si=PdgF1PrANUGpUt-t",
+                  "familia": "Pliometría"
+                },
+                {
+                  "nombre": "Hang power clean con pausa",
+                  "detalle": "2x4",
+                  "video": "https://youtu.be/xuX2AlIl1zo?si=MGipFw5JO3GFadKo",
+                  "familia": "Olímpicos"
+                },
+                {
+                  "nombre": "Press pallof jerk",
+                  "detalle": "x10/lado",
+                  "video": "https://youtube.com/shorts/5B2viiO9xgg?si=fqr69tvs8GY1hnyD",
+                  "familia": "Core"
+                }
+              ]
+            },
+            {
+              "nombre": "Airbike",
+              "detalle": "[15s a 400 watts + 30s descanso] x8",
+              "familia": "Cardio"
+            }
+          ],
+          "notas": "Calentar 10 mins en bici (suave) + movilidad."
+        }
+      }
     }
   ],
   "firebase": {
