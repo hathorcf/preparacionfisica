@@ -509,6 +509,109 @@ var DATOS = {
             }
           ],
           "notas": "Calentar 10 mins en bici (suave) + movilidad."
+        },
+        "2026-11-15": {
+          "titulo": "MMSS",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press banca",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/HzkHpIIo4IA?si=3Mvj4CUKPKtBXTFJ",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Flexiones drop",
+                  "detalle": "x4",
+                  "video": "https://youtube.com/shorts/vzNdwxM_REA?si=0K4Ftus0hDsVvftK",
+                  "familia": "Excéntrico"
+                },
+                {
+                  "nombre": "Remo-press polea",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/l6_bp6Bsfgs?si=k9TMtTLcrze9OKBt",
+                  "familia": "Tracción"
+                },
+                {
+                  "nombre": "Lanzamiento de balón medicinal lateral",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/02c2YLgF8iE?si=fpwVO8FDcqpRigDZ",
+                  "familia": "Empuje"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas",
+                  "detalle": "3x2",
+                  "familia": "Tracción"
+                },
+                {
+                  "nombre": "Jalón al pecho cerrado isométrico",
+                  "detalle": "x30s",
+                  "video": "https://youtube.com/shorts/Izif88851NM?si=cU6Av6uvbC9u-HoF",
+                  "familia": "Tracción"
+                },
+                {
+                  "nombre": "Push press landmine unilateral",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/kmAo1GxDJ6g?si=juq2hkZo3Oyc74lu",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Medicinal ball slam",
+                  "detalle": "x6 (BALON QUE NO BOTE)",
+                  "video": "https://youtube.com/shorts/reIpHeafMuc?si=UG6a3gl16q2mgFCt",
+                  "familia": "Empuje"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C3",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press militar sentado mancuernas",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/R0f2Of6Sl2A?si=XGvGDB8t_khdj-Rx",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Snatch con mancuerna",
+                  "detalle": "x6/lado",
+                  "video": "https://youtu.be/xA_DpewzL7c?si=-VswuGCnzrUbli1t",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Flexiones asistidas con goma",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/k0kdexV6wNU?si=Ot7VqcrrnD-B1nhP",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Remo birddog banco",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/p7UbGdv49Vc?si=9eVnK0oBZjlVRp-M",
+                  "familia": "Tracción"
+                }
+              ]
+            },
+            {
+              "nombre": "Cinta de correr",
+              "detalle": "2 km a 5:30 mins/km",
+              "familia": "Cardio"
+            }
+          ],
+          "notas": "Calentar hombro con goma y hacer movilidad."
         }
       }
     }
