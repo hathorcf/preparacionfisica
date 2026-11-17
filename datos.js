@@ -235,7 +235,8 @@ var DATOS = {
                 {
                   "nombre": "Flexiones isométricas a 90º",
                   "detalle": "x30s",
-                  "video": "https://www.youtube.com/shorts/nZ3ikpE-djc?feature=share"
+                  "video": "https://www.youtube.com/shorts/nZ3ikpE-djc?feature=share",
+                  "familia": "ISOMÉTRICO"
                 },
                 {
                   "nombre": "Remo bird dog en banco",
@@ -256,7 +257,8 @@ var DATOS = {
               "ejercicios": [
                 {
                   "nombre": "Dominadas",
-                  "detalle": "x4"
+                  "detalle": "x4",
+                  "familia": "DOMINADAS"
                 },
                 {
                   "nombre": "Remo invertido isométrico",
@@ -265,12 +267,14 @@ var DATOS = {
                 },
                 {
                   "nombre": "Press militar con barra",
-                  "detalle": "x6-8"
+                  "detalle": "x6-8",
+                  "familia": "PRESS MILITAR"
                 },
                 {
                   "nombre": "Floor slam con balón medicinal",
                   "detalle": "x10",
-                  "video": "https://www.youtube.com/shorts/Ie8TJwDue40?feature=share"
+                  "video": "https://www.youtube.com/shorts/Ie8TJwDue40?feature=share",
+                  "familia": "PLIOMETRÍA"
                 }
               ]
             },
@@ -282,7 +286,8 @@ var DATOS = {
                 {
                   "nombre": "Hang muscle snatch + push press",
                   "detalle": "3+3",
-                  "video": "https://youtu.be/XvSeutUEydo"
+                  "video": "https://youtu.be/XvSeutUEydo",
+                  "familia": "HALTEROFILIA"
                 }
               ]
             }
