@@ -214,6 +214,26 @@
     #imprimir img { max-width: 220px; max-height: 160px; display: block; margin: 4pt 0; }
   }
 
+  /* ---------- Resumen de pauta y controles adaptables ---------- */
+  .acciones-pauta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .acciones-pauta .btn { flex: 1 1 180px; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .acciones-pauta .btn.seleccionado { border-color: var(--accent); color: var(--accent); }
+  .resumen-pauta { display: grid; gap: 8px; }
+  .resumen-ejercicio, .resumen-circuito { min-width: 0; border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; overflow-wrap: anywhere; }
+  .resumen-ejercicio { display: grid; gap: 3px; }
+  .resumen-sub { margin: 7px 0 0 10px; background: var(--chalk); }
+  .resumen-circuito { border-color: var(--accent); }
+  .resumen-uso { color: var(--accent); font-size: .9rem; font-weight: 600; overflow-wrap: anywhere; }
+  /* Evita cortes y desbordamientos en pantallas estrechas y escritorio */
+  main, header, section, article, .panel, .resultado-card, .cols, .fila, .dos { min-width: 0; max-width: 100%; }
+  p, label, summary, button, li, strong, span { overflow-wrap: anywhere; }
+  button { max-width: 100%; }
+  .day { min-width: 0; padding: 4px; }
+  .day .n { white-space: nowrap; font-size: clamp(.68rem, 2.2vw, .95rem); }
+  .day .t { display: none; }
+  .panel, .resultado-card { overflow-wrap: anywhere; }
+  .guardar .btn, .acciones .btn { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+
   /* ---------- Móvil ---------- */
   html { -webkit-text-size-adjust: 100%; }
   body { overflow-x: hidden; }
@@ -230,7 +250,10 @@
     .panel { padding: 16px; }
     .panel h3 { font-size: 1.55rem; }
     .cal-head h2 { font-size: 1.3rem; }
-    .day .n { font-size: .85rem; }
+    .day .n { font-size: .78rem; }
+    .grid { gap: 3px; }
+    .day { min-height: 44px; padding: 3px; }
+    .acciones-pauta .btn { flex-basis: 100%; }
     .fila { grid-template-columns: 1fr; }
     .fila .ctrl { justify-content: flex-end; }
     .circ-ed { padding: 10px; }
@@ -594,11 +617,13 @@
   function estadoDia(f, e) {
     if (!e || e.descanso) return "";
     var p = progreso[clave(f)];
-    if (p && p.guardado) return "guardado";
     var total = (e.ejercicios || []).length, h = 0;
-    if (!p || !p.hechos || !total) return "";
-    for (var i = 0; i < total; i++) if (p.hechos[i]) h++;
-    return !h ? "" : (h >= total ? "ok" : "parcial");
+    if (p && p.hechos) {
+      for (var i = 0; i < total; i++) if (p.hechos[i]) h++;
+    }
+    if (total && h >= total) return "ok";
+    if (h > 0) return "parcial";
+    return p && p.guardado ? "ok" : "";
   }
 
   function entrenoDe(d) {
@@ -843,9 +868,8 @@
         fecha.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) +
         (e ? ": " + e.titulo : ": sin entrenamiento"));
       var est = estadoDia(fecha, e);
-      var sufijoMarca = est === "guardado" ? " ★" : (est === "ok" ? " ✓" : est === "parcial" ? " ½" : "");
+      var sufijoMarca = est === "ok" ? " ✓" : (est === "parcial" ? " ½" : "");
       b.appendChild(el("span", "n", String(n) + sufijoMarca));
-      if (e) b.appendChild(el("span", "t", e.titulo));
       b.addEventListener("click", (function (f) { return function () { seleccionar(f); }; })(fecha));
       cal.appendChild(b);
     }
@@ -1145,18 +1169,57 @@
     card.appendChild(btnReabrir);
     p.appendChild(card);
 
-    var detPauta = el("details");
-    detPauta.style.marginTop = "20px";
-    var summary = el("summary", "vacio", "Ver / Editar pauta asignada");
-    summary.style.cursor = "pointer";
-    summary.style.fontWeight = "600";
-    detPauta.appendChild(summary);
-    
-    var pautaContent = el("div");
-    pautaContent.style.marginTop = "10px";
-    pintarEditorFormularioBase(pautaContent);
-    detPauta.appendChild(pautaContent);
-    p.appendChild(detPauta);
+    var accionesPauta = el("div", "acciones acciones-pauta");
+    accionesPauta.style.marginTop = "18px";
+    var btnVerPauta = el("button", "btn ghost", "Ver entrenamiento");
+    btnVerPauta.type = "button";
+    var btnEditarPauta = el("button", "btn ghost", "Editar entrenamiento");
+    btnEditarPauta.type = "button";
+    accionesPauta.appendChild(btnVerPauta);
+    accionesPauta.appendChild(btnEditarPauta);
+    p.appendChild(accionesPauta);
+
+    var pautaContent = el("div", "pauta-content");
+    pautaContent.style.marginTop = "12px";
+    pautaContent.hidden = true;
+    p.appendChild(pautaContent);
+
+    function mostrarPauta(soloLectura) {
+      pautaContent.textContent = "";
+      pautaContent.hidden = false;
+      btnVerPauta.classList.toggle("seleccionado", soloLectura);
+      btnEditarPauta.classList.toggle("seleccionado", !soloLectura);
+      if (soloLectura) {
+        pautaContent.appendChild(el("h4", "editor-h", "Entrenamiento asignado"));
+        if (e.descanso) {
+          pautaContent.appendChild(el("p", "vacio", "Día de descanso"));
+        } else {
+          var listaResumen = el("div", "resumen-pauta");
+          function anadirResumen(x, path, esSub) {
+            var item = el("div", esSub ? "resumen-ejercicio resumen-sub" : "resumen-ejercicio");
+            item.appendChild(el("strong", null, x.nombre || "Ejercicio"));
+            if (x.detalle) item.appendChild(el("span", "det", x.detalle));
+            var r = pr.pesos && pr.pesos[path];
+            if (r && (r.kg || r.reps)) item.appendChild(el("span", "resumen-uso", "Realizado: " + textoPeso(r)));
+            listaResumen.appendChild(item);
+          }
+          (e.ejercicios || []).forEach(function (x, i) {
+            if (x.tipo === "circuito") {
+              var circ = el("section", "resumen-circuito");
+              circ.appendChild(el("strong", null, x.nombre || "Circuito"));
+              if (x.detalle) circ.appendChild(el("span", "det", x.detalle));
+              (x.ejercicios || []).forEach(function (y, j) { anadirResumen(y, i + "." + j, true); });
+              listaResumen.appendChild(circ);
+            } else anadirResumen(x, String(i), false);
+          });
+          pautaContent.appendChild(listaResumen);
+        }
+      } else {
+        pintarEditorFormularioBase(pautaContent);
+      }
+    }
+    btnVerPauta.addEventListener("click", function () { mostrarPauta(true); });
+    btnEditarPauta.addEventListener("click", function () { mostrarPauta(false); });
   }
 
   function pintarEditor() {
