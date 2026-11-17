@@ -183,15 +183,9 @@
   .rpe button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .rpe button:disabled, .item input:disabled { opacity: .45; }
   .obs-l { margin-top: 16px; }
-  
-  /* Tarjeta de resultado mejorada para el Entrenador */
-  .resultado-card { background: var(--card); border: 2px solid var(--accent); border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .resultado-card h4 { font-family: var(--head); font-size: 1.25rem; color: var(--accent); margin: 0 0 10px; display: flex; align-items: center; justify-content: space-between; }
-  .resultado-card .badge-ok { background: var(--accent); color: var(--accent-ink); font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-  .resultado-card p { margin: 0 0 8px; font-size: 0.95rem; }
-  .resultado-card .bloque-pesos { background: var(--rest); border-radius: 6px; padding: 10px; margin: 10px 0; }
-  .resultado-card .bloque-pesos ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
-  .resultado-card .obs-box { background: var(--chalk); border-left: 4px solid var(--tape); padding: 8px 10px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 0.9rem; }
+  .resultado { background: var(--rest); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
+  .resultado p { margin: 0 0 6px; }
+  .resultado .notas { background: var(--card); }
 
   /* ---------- Marca y login ---------- */
   #login { --chalk: #0f1c24; --card: #1a2b36; --line: #34495a; --ink: #f4f5f0; --muted: #a3b6c1; --accent: #ffd23f; --accent-ink: #0f1c24; background: var(--chalk); color: var(--ink); }
@@ -812,7 +806,7 @@
     cargarProgreso(c, function () {
       if (cliente !== c) return;
       pintarCalendario();
-      if (modo === "cliente") pintarVistaCliente(); else pintarPanel();
+      if (modo === "cliente") pintarVistaCliente(); else pintarResultado();
     });
   }
 
@@ -1067,155 +1061,203 @@
     p.appendChild(st);
   }
 
-  /* ================= Tarjeta de Resultados del Cliente (Entrenador) ================= */
-  function pintarResultadoEntrenador() {
+  function pintarResultado() {
+    var c = $("resultado");
+    if (!c) return;
+    c.textContent = "";
+    if (!fbConf() || !seleccionado) return;
+    var p = progreso[clave(seleccionado)];
+    if (!p) return;
+    var e = entrenoDe(seleccionado);
+    var total = e && e.ejercicios ? e.ejercicios.length : 0, h = 0;
+    for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
+    var pes = [];
+    if (e && p.pesos) recorrer(e, function (x, path) { var r = p.pesos[path]; if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r)); });
+    
+    var box = el("div", "resultado");
+    if (p.guardado) {
+      box.appendChild(el("p", "editor-h", "Realizado ✓" + (p.fechaGuardado ? " (Guardado el " + p.fechaGuardado + ")" : "")));
+    } else {
+      box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente (Aún no guardado definitivamente)"));
+    }
+    if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
+    if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
+    if (pes.length) {
+      box.appendChild(el("p", "editor-h", "Pesos y repeticiones"));
+      pes.forEach(function (t) { box.appendChild(el("p", null, t)); });
+    }
+    if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
+    
+    if (modo === "admin" && p.guardado) {
+      var btnReabrir = el("button", "btn ghost", "Reabrir entrenamiento");
+      btnReabrir.type = "button";
+      btnReabrir.style.marginTop = "10px";
+      btnReabrir.addEventListener("click", function () {
+        if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
+        p.guardado = false;
+        guardarProgresoDirecto(function (err) {
+          p.guardado = true;
+          aviso("Error al reabrir: " + err.message, true);
+        }, function () {
+          aviso("Entrenamiento reabierto correctamente.");
+          pintarCalendario();
+          pintarPanel();
+        });
+      });
+      box.appendChild(btnReabrir);
+    }
+
+    c.appendChild(box);
+  }
+
+  /* ---------- Editor (admin) ---------- */
+  function mover(arr, i, d) {
+    var j = i + d;
+    if (j < 0 || j >= arr.length) return;
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    pintarEditor();
+  }
+  function controles(arr, i) {
+    var c = el("div", "ctrl");
+    var up = el("button", null, "↑"); up.type = "button"; up.setAttribute("aria-label", "Subir");
+    var dn = el("button", null, "↓"); dn.type = "button"; dn.setAttribute("aria-label", "Bajar");
+    var x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Quitar");
+    up.addEventListener("click", function () { mover(arr, i, -1); });
+    dn.addEventListener("click", function () { mover(arr, i, 1); });
+    x.addEventListener("click", function () { arr.splice(i, 1); pintarEditor(); });
+    c.appendChild(up); c.appendChild(dn); c.appendChild(x);
+    return c;
+  }
+  function campo(obj, prop, placeholder, key) {
+    var inp = el("input");
+    inp.value = obj[prop] || "";
+    inp.placeholder = placeholder;
+    if (key) inp.setAttribute("data-key", key);
+    inp.addEventListener("input", function () { obj[prop] = inp.value; });
+    return inp;
+  }
+  function reducir(file, cb) {
+    var img = new Image(), u = URL.createObjectURL(file);
+    img.onload = function () {
+      var k = Math.min(1, 800 / Math.max(img.width, img.height));
+      var c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u);
+      cb(c.toDataURL("image/jpeg", 0.75));
+    };
+    img.src = u;
+  }
+  function selectorImagen(it) {
+    var w = el("div", "img-ed");
+    var f = el("input"); f.type = "file"; f.accept = "image/*";
+    var info = el("span", "vacio", it.imagen ? "Imagen cargada ✓" : "Sin imagen");
+    f.addEventListener("change", function () {
+      if (!f.files[0]) return;
+      reducir(f.files[0], function (url) {
+        var ruta = "imagenes/" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + ".jpg";
+        pendientes[ruta] = url.split(",")[1];
+        it.imagen = ruta;
+        info.textContent = "Imagen lista ✓ (se sube al publicar)";
+      });
+    });
+    var q = el("button", "btn ghost", "Quitar imagen"); q.type = "button";
+    q.addEventListener("click", function () { delete pendientes[it.imagen]; delete it.imagen; info.textContent = "Sin imagen"; f.value = ""; });
+    w.appendChild(f); w.appendChild(info); w.appendChild(q);
+    return w;
+  }
+  function areaTexto(obj, prop, placeholder) {
+    var t = el("textarea", "desc-ed");
+    t.value = obj[prop] || ""; t.placeholder = placeholder;
+    t.addEventListener("input", function () { obj[prop] = t.value; });
+    return t;
+  }
+  function filaEjercicio(arr, i, key, sub) {
+    var it = arr[i];
+    var f = el("div", "fila" + (sub ? " sub" : ""));
+    var dos = el("div", "dos");
+    var ni = campo(it, "nombre", "Ejercicio", key);
+    ni.setAttribute("list", "dlEj");
+    ni.addEventListener("change", function () {
+      var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
+      if (!a) return;
+      ["familia", "detalle", "video", "imagen"].concat(area === "rehab" ? ["descripcion"] : []).forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
+      if (cambio) pintarEditor();
+    });
+    dos.appendChild(ni);
+    var fi = campo(it, "familia", "Familia (ej. SENTADILLA)");
+    fi.setAttribute("list", "dlFam");
+    dos.appendChild(fi);
+    dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
+    dos.appendChild(campo(it, "video", "Vídeo (enlace)"));
+    dos.appendChild(selectorImagen(it));
+    if (area === "rehab") dos.appendChild(areaTexto(it, "descripcion", "Descripción (cómo se hace, precauciones…)"));
+    f.appendChild(dos);
+    f.appendChild(controles(arr, i));
+    return f;
+  }
+  function bloqueCircuito(arr, i) {
+    var it = arr[i];
+    var box = el("div", "circ-ed");
+    var cab = el("div", "fila");
+    var dos = el("div", "dos");
+    dos.appendChild(campo(it, "nombre", "Nombre del circuito", "c" + i));
+    dos.appendChild(campo(it, "detalle", "Ej. 3 rondas · 1 min"));
+    cab.appendChild(dos);
+    cab.appendChild(controles(arr, i));
+    box.appendChild(cab);
+    it.ejercicios = it.ejercicios || [];
+    it.ejercicios.forEach(function (_, j) { box.appendChild(filaEjercicio(it.ejercicios, j, i + "." + j, true)); });
+    var add = el("button", "btn ghost", "+ Ejercicio en el circuito");
+    add.type = "button";
+    add.addEventListener("click", function () {
+      it.ejercicios.push({ nombre: "", detalle: "" });
+      enfocar = i + "." + (it.ejercicios.length - 1);
+      pintarEditor();
+    });
+    box.appendChild(add);
+    return box;
+  }
+
+  function pintarEditor() {
+    if (area === "rehab") { pintarEditorRehab(); return; }
     var p = $("panel");
     p.textContent = "";
     var f = seleccionado;
     p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
 
-    var e = entrenoDe(f);
-    if (!e) {
-      p.appendChild(el("h3", null, "Sin entrenamiento"));
-      p.appendChild(el("p", "vacio", "No hay entrenamiento asignado para este día."));
-      return;
-    }
-
-    p.appendChild(el("h3", null, e.titulo));
-    if (e.notas) p.appendChild(el("p", "notas", e.notas));
-
-    var pr = progreso[clave(f)];
-    if (!pr || !pr.guardado) {
-      p.appendChild(el("p", "vacio", "El cliente aún no ha guardado este entrenamiento. (Puedes editar la pauta abajo si lo deseas)."));
-      p.appendChild(el("hr", "sep"));
-      pintarEditorFormularioBase(p, e);
-      return;
-    }
-
-    // Tarjeta limpia con los resultados del cliente
-    var card = el("div", "resultado-card");
-    var h4 = el("h4");
-    h4.appendChild(document.createTextNode("Registro del cliente"));
-    h4.appendChild(el("span", "badge-ok", "Realizado ✓"));
-    card.appendChild(h4);
-
-    if (pr.fechaGuardado) {
-      card.appendChild(el("p", "vacio", "Guardado el " + pr.fechaGuardado));
-    }
-
-    var total = (e.ejercicios || []).length, h = 0;
-    if (pr.hechos) {
-      for (var i = 0; i < total; i++) if (pr.hechos[i]) h++;
-    }
-    if (total) {
-      card.appendChild(el("p", null, "Ejercicios completados: " + h + " de " + total));
-    }
-
-    if (pr.esfuerzo) {
-      card.appendChild(el("p", null, "Esfuerzo percibido (RPE): " + pr.esfuerzo + " / 10"));
-    }
-
-    // Desglose de pesos
-    var pes = [];
-    if (e && pr.pesos) {
-      recorrer(e, function (x, path) {
-        var r = pr.pesos[path];
-        if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r));
-      });
-    }
-
-    if (pes.length) {
-      var pPesos = el("div", "bloque-pesos");
-      pPesos.appendChild(el("strong", null, "Pesos y repeticiones aplicadas:"));
-      var ulP = el("ul");
-      pes.forEach(function (t) {
-        ulP.appendChild(el("li", null, t));
-      });
-      pPesos.appendChild(ulP);
-      card.appendChild(pPesos);
-    }
-
-    if ((pr.obs || "").trim()) {
-      var boxObs = el("div", "obs-box");
-      boxObs.appendChild(el("strong", null, "Observaciones del cliente:"));
-      boxObs.appendChild(el("p", null, pr.obs));
-      card.appendChild(boxObs);
-    }
-
-    // Botón Reabrir
-    var btnReabrir = el("button", "btn ghost full", "Reabrir entrenamiento al cliente");
-    btnReabrir.type = "button";
-    btnReabrir.style.marginTop = "14px";
-    btnReabrir.addEventListener("click", function () {
-      if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
-      pr.guardado = false;
-      guardarProgresoDirecto(function (err) {
-        pr.guardado = true;
-        aviso("Error al reabrir: " + err.message, true);
-      }, function () {
-        aviso("Entrenamiento reabierto correctamente.");
-        pintarCalendario();
-        pintarPanel();
-      });
-    });
-    card.appendChild(btnReabrir);
-    p.appendChild(card);
-
-    // Enlace sutil o botón para ver la pauta original si el entrenador quiere consultarla
-    var detPauta = el("details");
-    detPauta.style.marginTop = "20px";
-    var summary = el("summary", "vacio", "Ver / Editar pauta asignada");
-    summary.style.cursor = "pointer";
-    summary.style.fontWeight = "600";
-    detPauta.appendChild(summary);
-    
-    var pautaContent = el("div");
-    pautaContent.style.marginTop = "10px";
-    pintarEditorFormularioBase(pautaContent, e);
-    detPauta.appendChild(pautaContent);
-    p.appendChild(detPauta);
-  }
-
-  /* ---------- Editor (admin) común ---------- */
-  function pintarEditor() {
-    if (area === "rehab") { pintarEditorRehab(); return; }
-    if (modo === "admin") {
-      pintarResultadoEntrenador();
-      return;
-    }
-  }
-
-  function pintarEditorFormularioBase(container, eBase) {
     var dl = el("datalist"); dl.id = "dlEj"; var bib = biblioteca();
     Object.keys(bib).forEach(function (k) { var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o); });
-    container.appendChild(dl);
+    p.appendChild(dl);
 
     var dlf = el("datalist"); dlf.id = "dlFam";
     FAMILIAS_PERMITIDAS.forEach(function (fam) {
       var o = el("option"); o.value = fam; dlf.appendChild(o);
     });
-    container.appendChild(dlf);
+    p.appendChild(dlf);
+
+    var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
     var ti = campo(borrador, "titulo", "Ej. Pierna, Empuje, Cardio"); ti.id = "eTitulo";
-    container.appendChild(lt); container.appendChild(ti);
+    p.appendChild(lt); p.appendChild(ti);
 
     var chk = el("label", "check");
     var cb = el("input"); cb.type = "checkbox"; cb.checked = borrador.descanso;
     cb.addEventListener("change", function () { borrador.descanso = cb.checked; pintarEditor(); });
     chk.appendChild(cb); chk.appendChild(document.createTextNode("Día de descanso"));
-    container.appendChild(chk);
+    p.appendChild(chk);
 
     var ln = el("label", null, "Notas (opcional)"); ln.setAttribute("for", "eNotas");
     var ta = el("textarea"); ta.id = "eNotas"; ta.value = borrador.notas || "";
     ta.placeholder = "Ej. Calentar 10 min antes de empezar.";
     ta.addEventListener("input", function () { borrador.notas = ta.value; });
-    container.appendChild(ln); container.appendChild(ta);
+    p.appendChild(ln); p.appendChild(ta);
 
     if (!borrador.descanso) {
-      container.appendChild(el("p", "editor-h", "Ejercicios"));
+      p.appendChild(el("p", "editor-h", "Ejercicios"));
       borrador.ejercicios.forEach(function (it, i) {
-        container.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
+        p.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
       });
       var ac = el("div", "acciones");
       var b1 = el("button", "btn ghost", "+ Añadir ejercicio"); b1.type = "button";
@@ -1234,12 +1276,11 @@
         pintarEditor();
       });
       ac.appendChild(b1); ac.appendChild(b2);
-      container.appendChild(ac);
+      p.appendChild(ac);
     }
 
-    container.appendChild(el("hr", "sep"));
+    p.appendChild(el("hr", "sep"));
 
-    var f = seleccionado;
     var la = el("label", null, "Aplicar a"); la.setAttribute("for", "eAmbito");
     var sel = el("select"); sel.id = "eAmbito";
     var o1 = el("option", null, "Solo este día"); o1.value = "dia";
@@ -1247,7 +1288,7 @@
     sel.appendChild(o1); sel.appendChild(o2);
     sel.value = ambito;
     sel.addEventListener("change", function () { ambito = sel.value; });
-    container.appendChild(la); container.appendChild(sel);
+    p.appendChild(la); p.appendChild(sel);
 
     var g = el("div", "guardar");
     var bg = el("button", "btn", "Guardar día"); bg.type = "button";
@@ -1266,10 +1307,10 @@
       bs.addEventListener("click", quitarSemana);
       g.appendChild(bs);
     }
-    container.appendChild(g);
+    p.appendChild(g);
 
     if (enfocar !== null) {
-      var q = container.querySelector('[data-key="' + enfocar + '"]');
+      var q = p.querySelector('[data-key="' + enfocar + '"]');
       enfocar = null;
       if (q) q.focus();
     }
@@ -1933,7 +1974,7 @@
         var r = pr.pesos[path], kg = r ? numero(r.kg) : null;
         if (kg === null || !x.nombre) return;
         var fam = (x.familia || "").trim().toLowerCase();
-        if (familiasDeseadas.indexOf(fam) < 0) return;
+        if (familiasDeseadas.indexOf(fam) < 0) return; // Solo incluimos las familias especificadas
         
         var nom = x.nombre.trim(), fk = fam, vk = nom.toLowerCase();
         var famNombreReal = fam.toUpperCase();
