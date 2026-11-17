@@ -75,12 +75,6 @@
     box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
   .login-box p.sub { color: var(--muted); margin: 0 0 22px; }
-  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 22px; }
-  .tabs button {
-    padding: 12px; border: 2px solid var(--line); background: var(--card);
-    border-radius: 6px; font-weight: 700;
-  }
-  .tabs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 
   /* ---------- Cabecera ---------- */
   header.top {
@@ -132,11 +126,6 @@
   .day.sel { border-color: var(--accent); }
   .day:hover:not(.empty) { border-color: var(--line); }
   .day.sel:hover { border-color: var(--accent); }
-  @media (max-width: 560px) {
-    .day { padding: 4px; aspect-ratio: auto; min-height: 56px; }
-    .day .t { font-size: 0; height: 8px; width: 8px; border-radius: 50%; background: var(--accent); }
-    .day.rest .t { background: var(--muted); }
-  }
 
   /* ---------- Panel del día ---------- */
   .panel { background: var(--card); border-radius: 10px; padding: 22px; border: 2px solid var(--line); position: sticky; top: 16px; }
@@ -183,9 +172,15 @@
   .rpe button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .rpe button:disabled, .item input:disabled { opacity: .45; }
   .obs-l { margin-top: 16px; }
-  .resultado { background: var(--rest); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
-  .resultado p { margin: 0 0 6px; }
-  .resultado .notas { background: var(--card); }
+  
+  /* Tarjeta de resultado mejorada para el Entrenador */
+  .resultado-card { background: var(--card); border: 2px solid var(--accent); border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .resultado-card h4 { font-family: var(--head); font-size: 1.25rem; color: var(--accent); margin: 0 0 10px; display: flex; align-items: center; justify-content: space-between; }
+  .resultado-card .badge-ok { background: var(--accent); color: var(--accent-ink); font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+  .resultado-card p { margin: 0 0 8px; font-size: 0.95rem; }
+  .resultado-card .bloque-pesos { background: var(--rest); border-radius: 6px; padding: 10px; margin: 10px 0; }
+  .resultado-card .bloque-pesos ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+  .resultado-card .obs-box { background: var(--chalk); border-left: 4px solid var(--tape); padding: 8px 10px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 0.9rem; }
 
   /* ---------- Marca y login ---------- */
   #login { --chalk: #0f1c24; --card: #1a2b36; --line: #34495a; --ink: #f4f5f0; --muted: #a3b6c1; --accent: #ffd23f; --accent-ink: #0f1c24; background: var(--chalk); color: var(--ink); }
@@ -338,7 +333,7 @@
     <p class="error" id="error" role="alert"></p>
     <button class="btn full" type="submit">Entrar</button>
     <button type="button" id="btnInstalar" class="btn ghost full" hidden style="margin-top:14px">Instalar como app</button>
-    <button type="button" id="tabAdmin" class="link-admin">Acceso entrenador</button>
+    <button type="button" id="tabAdmin" class="link-admin" type="button">Acceso entrenador</button>
   </form>
 </section>
 
@@ -508,20 +503,20 @@
   var FAMILIAS_PERMITIDAS = ["SENTADILLA", "PESO MUERTO", "HIP THRUST", "PRESS BANCA", "PRESS MILITAR", "REMO", "DOMINADAS", "HALTEROFILIA", "CORE", "PLIOMETRÍA", "ISOMÉTRICO", "EXCÉNTRICO"];
 
   var tipoLogin = "cliente";
-  var modo = null;            // "cliente" | "admin"
+  var modo = null;
   var cliente = null;
   var vista = new Date();
   var seleccionado = null;
-  var borrador = null;        // copia editable del día seleccionado (admin)
-  var ambito = "dia";         // "dia" | "semana"
+  var borrador = null;
+  var ambito = "dia";
   var enfocar = null;
   var sucio = false;
   var avisoTimer = null;
-  var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo, guardado, fechaGuardado} }
+  var progreso = {};
   var progCargado = false;
-  var area = "entreno";        // "entreno" | "rehab"
-  var selR = -1;              // sesión de rehabilitación seleccionada
-  var pendientes = {};        // imágenes elegidas que se suben al publicar
+  var area = "entreno";
+  var selR = -1;
+  var pendientes = {};
 
   var $ = function (id) { return document.getElementById(id); };
   var pad = function (n) { return n < 10 ? "0" + n : "" + n; };
@@ -547,7 +542,6 @@
   }
 
   /* ================= Datos ================= */
-  /* ---------- Progreso del cliente (Firebase, vía REST) ---------- */
   function fbConf() {
     return DATOS.firebase && DATOS.firebase.projectId && DATOS.firebase.apiKey ? DATOS.firebase : null;
   }
@@ -806,7 +800,7 @@
     cargarProgreso(c, function () {
       if (cliente !== c) return;
       pintarCalendario();
-      if (modo === "cliente") pintarVistaCliente(); else pintarResultado();
+      if (modo === "cliente") pintarVistaCliente(); else pintarPanel();
     });
   }
 
@@ -1056,66 +1050,127 @@
       });
       p.appendChild(btnGuardarEntreno);
     }
-
-    var st = el("p", "vacio"); st.id = "progEstado";
-    p.appendChild(st);
   }
 
-  function pintarResultado() {
-    var c = $("resultado");
-    if (!c) return;
-    c.textContent = "";
-    if (!fbConf() || !seleccionado) return;
-    var p = progreso[clave(seleccionado)];
-    if (!p) return;
-    var e = entrenoDe(seleccionado);
-    var total = e && e.ejercicios ? e.ejercicios.length : 0, h = 0;
-    for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
+  /* ================= Tarjeta de Resultados del Cliente (Entrenador) ================= */
+  function pintarResultadoEntrenador() {
+    var p = $("panel");
+    p.textContent = "";
+    var f = seleccionado;
+    p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
+
+    var e = entrenoDe(f);
+    if (!e) {
+      p.appendChild(el("h3", null, "Sin entrenamiento"));
+      p.appendChild(el("p", "vacio", "No hay entrenamiento asignado para este día."));
+      p.appendChild(el("hr", "sep"));
+      pintarEditorFormularioBase(p);
+      return;
+    }
+
+    p.appendChild(el("h3", null, e.titulo));
+    if (e.notas) p.appendChild(el("p", "notas", e.notas));
+
+    var pr = progreso[clave(f)];
+    if (!pr || !pr.guardado) {
+      p.appendChild(el("p", "vacio", "El cliente aún no ha guardado este entrenamiento. (Puedes editar la pauta abajo si lo deseas)."));
+      p.appendChild(el("hr", "sep"));
+      pintarEditorFormularioBase(p);
+      return;
+    }
+
+    var card = el("div", "resultado-card");
+    var h4 = el("h4");
+    h4.appendChild(document.createTextNode("Registro del cliente"));
+    h4.appendChild(el("span", "badge-ok", "Realizado ✓"));
+    card.appendChild(h4);
+
+    if (pr.fechaGuardado) {
+      card.appendChild(el("p", "vacio", "Guardado el " + pr.fechaGuardado));
+    }
+
+    var total = (e.ejercicios || []).length, h = 0;
+    if (pr.hechos) {
+      for (var i = 0; i < total; i++) if (pr.hechos[i]) h++;
+    }
+    if (total) {
+      card.appendChild(el("p", null, "Ejercicios completados: " + h + " de " + total));
+    }
+
+    if (pr.esfuerzo) {
+      card.appendChild(el("p", null, "Esfuerzo percibido (RPE): " + pr.esfuerzo + " / 10"));
+    }
+
     var pes = [];
-    if (e && p.pesos) recorrer(e, function (x, path) { var r = p.pesos[path]; if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r)); });
-    
-    var box = el("div", "resultado");
-    if (p.guardado) {
-      box.appendChild(el("p", "editor-h", "Realizado ✓" + (p.fechaGuardado ? " (Guardado el " + p.fechaGuardado + ")" : "")));
-    } else {
-      box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente (Aún no guardado definitivamente)"));
-    }
-    if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
-    if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
-    if (pes.length) {
-      box.appendChild(el("p", "editor-h", "Pesos y repeticiones"));
-      pes.forEach(function (t) { box.appendChild(el("p", null, t)); });
-    }
-    if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
-    
-    if (modo === "admin" && p.guardado) {
-      var btnReabrir = el("button", "btn ghost", "Reabrir entrenamiento");
-      btnReabrir.type = "button";
-      btnReabrir.style.marginTop = "10px";
-      btnReabrir.addEventListener("click", function () {
-        if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
-        p.guardado = false;
-        guardarProgresoDirecto(function (err) {
-          p.guardado = true;
-          aviso("Error al reabrir: " + err.message, true);
-        }, function () {
-          aviso("Entrenamiento reabierto correctamente.");
-          pintarCalendario();
-          pintarPanel();
-        });
+    if (e && pr.pesos) {
+      recorrer(e, function (x, path) {
+        var r = pr.pesos[path];
+        if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r));
       });
-      box.appendChild(btnReabrir);
     }
 
-    c.appendChild(box);
+    if (pes.length) {
+      var pPesos = el("div", "bloque-pesos");
+      pPesos.appendChild(el("strong", null, "Pesos y repeticiones aplicadas:"));
+      var ulP = el("ul");
+      pes.forEach(function (t) {
+        ulP.appendChild(el("li", null, t));
+      });
+      pPesos.appendChild(ulP);
+      card.appendChild(pPesos);
+    }
+
+    if ((pr.obs || "").trim()) {
+      var boxObs = el("div", "obs-box");
+      boxObs.appendChild(el("strong", null, "Observaciones del cliente:"));
+      boxObs.appendChild(el("p", null, pr.obs));
+      card.appendChild(boxObs);
+    }
+
+    var btnReabrir = el("button", "btn ghost full", "Reabrir entrenamiento al cliente");
+    btnReabrir.type = "button";
+    btnReabrir.style.marginTop = "14px";
+    btnReabrir.addEventListener("click", function () {
+      if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
+      pr.guardado = false;
+      guardarProgresoDirecto(function (err) {
+        pr.guardado = true;
+        aviso("Error al reabrir: " + err.message, true);
+      }, function () {
+        aviso("Entrenamiento reabierto correctamente.");
+        pintarCalendario();
+        pintarPanel();
+      });
+    });
+    card.appendChild(btnReabrir);
+    p.appendChild(card);
+
+    var detPauta = el("details");
+    detPauta.style.marginTop = "20px";
+    var summary = el("summary", "vacio", "Ver / Editar pauta asignada");
+    summary.style.cursor = "pointer";
+    summary.style.fontWeight = "600";
+    detPauta.appendChild(summary);
+    
+    var pautaContent = el("div");
+    pautaContent.style.marginTop = "10px";
+    pintarEditorFormularioBase(pautaContent);
+    detPauta.appendChild(pautaContent);
+    p.appendChild(detPauta);
   }
 
-  /* ---------- Editor (admin) ---------- */
+  function pintarEditor() {
+    if (area === "rehab") { pintarEditorRehab(); return; }
+    if (modo === "admin") {
+      pintarResultadoEntrenador();
+    }
+  }
+
   function mover(arr, i, d) {
     var j = i + d;
     if (j < 0 || j >= arr.length) return;
     var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
-    pintarEditor();
+    pintarPanel();
   }
   function controles(arr, i) {
     var c = el("div", "ctrl");
@@ -1124,7 +1179,7 @@
     var x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Quitar");
     up.addEventListener("click", function () { mover(arr, i, -1); });
     dn.addEventListener("click", function () { mover(arr, i, 1); });
-    x.addEventListener("click", function () { arr.splice(i, 1); pintarEditor(); });
+    x.addEventListener("click", function () { arr.splice(i, 1); pintarPanel(); });
     c.appendChild(up); c.appendChild(dn); c.appendChild(x);
     return c;
   }
@@ -1182,7 +1237,7 @@
       var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
       if (!a) return;
       ["familia", "detalle", "video", "imagen"].concat(area === "rehab" ? ["descripcion"] : []).forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
-      if (cambio) pintarEditor();
+      if (cambio) pintarPanel();
     });
     dos.appendChild(ni);
     var fi = campo(it, "familia", "Familia (ej. SENTADILLA)");
@@ -1213,58 +1268,50 @@
     add.addEventListener("click", function () {
       it.ejercicios.push({ nombre: "", detalle: "" });
       enfocar = i + "." + (it.ejercicios.length - 1);
-      pintarEditor();
+      pintarPanel();
     });
     box.appendChild(add);
     return box;
   }
 
-  function pintarEditor() {
-    if (area === "rehab") { pintarEditorRehab(); return; }
-    var p = $("panel");
-    p.textContent = "";
-    var f = seleccionado;
-    p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
-
+  function pintarEditorFormularioBase(container) {
     var dl = el("datalist"); dl.id = "dlEj"; var bib = biblioteca();
     Object.keys(bib).forEach(function (k) { var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o); });
-    p.appendChild(dl);
+    container.appendChild(dl);
 
     var dlf = el("datalist"); dlf.id = "dlFam";
     FAMILIAS_PERMITIDAS.forEach(function (fam) {
       var o = el("option"); o.value = fam; dlf.appendChild(o);
     });
-    p.appendChild(dlf);
-
-    var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
+    container.appendChild(dlf);
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
     var ti = campo(borrador, "titulo", "Ej. Pierna, Empuje, Cardio"); ti.id = "eTitulo";
-    p.appendChild(lt); p.appendChild(ti);
+    container.appendChild(lt); container.appendChild(ti);
 
     var chk = el("label", "check");
     var cb = el("input"); cb.type = "checkbox"; cb.checked = borrador.descanso;
-    cb.addEventListener("change", function () { borrador.descanso = cb.checked; pintarEditor(); });
+    cb.addEventListener("change", function () { borrador.descanso = cb.checked; pintarPanel(); });
     chk.appendChild(cb); chk.appendChild(document.createTextNode("Día de descanso"));
-    p.appendChild(chk);
+    container.appendChild(chk);
 
     var ln = el("label", null, "Notas (opcional)"); ln.setAttribute("for", "eNotas");
     var ta = el("textarea"); ta.id = "eNotas"; ta.value = borrador.notas || "";
     ta.placeholder = "Ej. Calentar 10 min antes de empezar.";
     ta.addEventListener("input", function () { borrador.notas = ta.value; });
-    p.appendChild(ln); p.appendChild(ta);
+    container.appendChild(ln); container.appendChild(ta);
 
     if (!borrador.descanso) {
-      p.appendChild(el("p", "editor-h", "Ejercicios"));
+      container.appendChild(el("p", "editor-h", "Ejercicios"));
       borrador.ejercicios.forEach(function (it, i) {
-        p.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
+        container.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
       });
       var ac = el("div", "acciones");
       var b1 = el("button", "btn ghost", "+ Añadir ejercicio"); b1.type = "button";
       b1.addEventListener("click", function () {
         borrador.ejercicios.push({ nombre: "", detalle: "" });
         enfocar = String(borrador.ejercicios.length - 1);
-        pintarEditor();
+        pintarPanel();
       });
       var b2 = el("button", "btn ghost", "+ Añadir circuito"); b2.type = "button";
       b2.addEventListener("click", function () {
@@ -1273,14 +1320,15 @@
           ejercicios: [{ nombre: "", detalle: "" }, { nombre: "", detalle: "" }]
         });
         enfocar = (borrador.ejercicios.length - 1) + ".0";
-        pintarEditor();
+        pintarPanel();
       });
       ac.appendChild(b1); ac.appendChild(b2);
-      p.appendChild(ac);
+      container.appendChild(ac);
     }
 
-    p.appendChild(el("hr", "sep"));
+    container.appendChild(el("hr", "sep"));
 
+    var f = seleccionado;
     var la = el("label", null, "Aplicar a"); la.setAttribute("for", "eAmbito");
     var sel = el("select"); sel.id = "eAmbito";
     var o1 = el("option", null, "Solo este día"); o1.value = "dia";
@@ -1288,7 +1336,7 @@
     sel.appendChild(o1); sel.appendChild(o2);
     sel.value = ambito;
     sel.addEventListener("change", function () { ambito = sel.value; });
-    p.appendChild(la); p.appendChild(sel);
+    container.appendChild(la); container.appendChild(sel);
 
     var g = el("div", "guardar");
     var bg = el("button", "btn", "Guardar día"); bg.type = "button";
@@ -1307,10 +1355,10 @@
       bs.addEventListener("click", quitarSemana);
       g.appendChild(bs);
     }
-    p.appendChild(g);
+    container.appendChild(g);
 
     if (enfocar !== null) {
-      var q = p.querySelector('[data-key="' + enfocar + '"]');
+      var q = container.querySelector('[data-key="' + enfocar + '"]');
       enfocar = null;
       if (q) q.focus();
     }
@@ -1753,7 +1801,7 @@
     var lim = limpiar(borrador, true);
     if (!lim) { aviso("Escribe al menos un título, unas notas o un ejercicio.", true); return; }
     delete lim.descanso;
-    var dst = DATOS.clientes[+$("csCliente"].value];
+    var dst = DATOS.clientes[+$("csCliente").value];
     sesiones(dst).push(lim);
     marcarSucio();
     $("dlgCopiaSesion").close();
@@ -1781,7 +1829,7 @@
     var v = $("cpFecha").value;
     if (!v) { $("cpError").textContent = "Elige la fecha de destino."; return; }
     var q = v.split("-"), dest = new Date(+q[0], +q[1] - 1, +q[2]);
-    var dst = DATOS.clientes[+$("cpCliente"].value];
+    var dst = DATOS.clientes[+$("cpCliente").value];
     var sem = $("cpTipo").value === "semana", n = sem ? 7 : 1;
     var o0 = sem ? new Date(seleccionado.getFullYear(), seleccionado.getMonth(), seleccionado.getDate() - idxSemana(seleccionado)) : seleccionado;
     var d0 = sem ? new Date(dest.getFullYear(), dest.getMonth(), dest.getDate() - idxSemana(dest)) : dest;
@@ -1974,7 +2022,7 @@
         var r = pr.pesos[path], kg = r ? numero(r.kg) : null;
         if (kg === null || !x.nombre) return;
         var fam = (x.familia || "").trim().toLowerCase();
-        if (familiasDeseadas.indexOf(fam) < 0) return; // Solo incluimos las familias especificadas
+        if (familiasDeseadas.indexOf(fam) < 0) return;
         
         var nom = x.nombre.trim(), fk = fam, vk = nom.toLowerCase();
         var famNombreReal = fam.toUpperCase();
