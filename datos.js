@@ -156,20 +156,24 @@ var DATOS = {
                 {
                   "nombre": "Hip thrust con barra y pausa abajo",
                   "detalle": "x4",
-                  "video": "https://www.youtube.com/shorts/9xJHFG11Sj8?feature=share"
+                  "video": "https://www.youtube.com/shorts/9xJHFG11Sj8?feature=share",
+                  "familia": "HIP THRUST"
                 },
                 {
                   "nombre": "Sprint máximo airbike",
-                  "detalle": "[x15s + 15s descanso] x3"
+                  "detalle": "[x15s + 15s descanso] x3",
+                  "familia": "CARDIO"
                 },
                 {
                   "nombre": "Hang power clean",
                   "detalle": "x4",
-                  "video": "https://www.youtube.com/shorts/7KMYH9gyeEM?feature=share"
+                  "video": "https://www.youtube.com/shorts/7KMYH9gyeEM?feature=share",
+                  "familia": "HALTEROFILIA"
                 },
                 {
                   "nombre": "Russian twist",
-                  "detalle": "x10/lado"
+                  "detalle": "x10/lado",
+                  "familia": "CORE"
                 }
               ]
             },
@@ -180,33 +184,39 @@ var DATOS = {
               "ejercicios": [
                 {
                   "nombre": "Front squat con pausa",
-                  "detalle": "x4"
+                  "detalle": "x4",
+                  "familia": "SENTADILLA"
                 },
                 {
                   "nombre": "Saltos verticales asistidos con goma",
                   "detalle": "x6",
-                  "video": "https://www.youtube.com/shorts/Y4iU5j2VQBE?feature=share"
+                  "video": "https://www.youtube.com/shorts/Y4iU5j2VQBE?feature=share",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Goblet pistol squat",
                   "detalle": "x6/lado",
-                  "video": "https://www.youtube.com/shorts/zWCs8-f-3Ks?feature=share"
+                  "video": "https://www.youtube.com/shorts/zWCs8-f-3Ks?feature=share",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Plancha moviendo kettlebell",
                   "detalle": "x30s",
-                  "video": "https://www.youtube.com/shorts/odo0h50hfwY?feature=share"
+                  "video": "https://www.youtube.com/shorts/odo0h50hfwY?feature=share",
+                  "familia": "CORE"
                 }
               ]
             },
             {
               "nombre": "Máquina de cuádriceps unilateral isométrica",
               "detalle": "x30s/lado",
-              "video": "https://www.youtube.com/shorts/HQwNFQENCLA?feature=share"
+              "video": "https://www.youtube.com/shorts/HQwNFQENCLA?feature=share",
+              "familia": "ISOMÉTRICO"
             },
             {
               "nombre": "Intervalos máximos airbike",
-              "detalle": "[10s+10s descanso] x8"
+              "detalle": "[10s+10s descanso] x8",
+              "familia": "CORE"
             }
           ]
         },
