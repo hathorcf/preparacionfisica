@@ -516,9 +516,8 @@
   var enfocar = null;
   var sucio = false;
   var avisoTimer = null;
-  var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo} }
+  var progreso = {};          // lo que rellena el cliente: { "AAAA-MM-DD": {hechos, obs, esfuerzo, guardado, fechaGuardado} }
   var progCargado = false;
-  var progTimer = null;
   var area = "entreno";        // "entreno" | "rehab"
   var selR = -1;              // sesión de rehabilitación seleccionada
   var pendientes = {};        // imágenes elegidas que se suben al publicar
@@ -556,7 +555,6 @@
     return "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(DATOS.firebase.projectId) +
       "/databases/(default)/documents/progreso/" + encodeURIComponent(idProg(c));
   }
-  function setEstado(t) { var e = $("progEstado"); if (e) e.textContent = t; }
   function cargarProgreso(c, cb) {
     progreso = {}; progCargado = false;
     if (!fbConf()) { cb(); return; }
@@ -572,33 +570,36 @@
       })
       .catch(function (e) { aviso("No pude cargar el progreso (" + e.message + ").", true); cb(); });
   }
-  function guardarProgreso() {
-    if (!fbConf() || !progCargado || modo !== "cliente") return;
+  
+  function guardarProgresoDirecto(cbError, cbOk) {
+    if (!fbConf() || !progCargado || modo !== "cliente") { if (cbOk) cbOk(); return; }
     fetch(urlProg(cliente) + "?key=" + encodeURIComponent(DATOS.firebase.apiKey) + "&updateMask.fieldPaths=datos", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fields: { datos: { stringValue: JSON.stringify(progreso) } } })
     }).then(function (r) {
       if (!r.ok) throw new Error("error " + r.status);
-      setEstado("Guardado ✓");
+      if (cbOk) cbOk();
     }).catch(function (e) {
-      setEstado("");
-      aviso("No se pudo guardar (" + e.message + "). Inténtalo de nuevo.", true);
+      if (cbError) cbError(e);
     });
   }
-  function programarGuardado() {
-    setEstado("Guardando…");
-    clearTimeout(progTimer);
-    progTimer = setTimeout(guardarProgreso, 700);
-  }
+
   function progDia(crear) {
     var k = clave(seleccionado);
-    if (!progreso[k] && crear) progreso[k] = { hechos: {}, obs: "", esfuerzo: 0 };
+    if (!progreso[k] && crear) progreso[k] = { hechos: {}, obs: "", esfuerzo: 0, guardado: false };
     return progreso[k];
   }
+  
+  function estaGuardadoDia(f) {
+    var p = progreso[clave(f)];
+    return !!(p && p.guardado);
+  }
+
   function estadoDia(f, e) {
     if (!e || e.descanso) return "";
     var p = progreso[clave(f)];
+    if (p && p.guardado) return "guardado";
     var total = (e.ejercicios || []).length, h = 0;
     if (!p || !p.hechos || !total) return "";
     for (var i = 0; i < total; i++) if (p.hechos[i]) h++;
@@ -847,7 +848,8 @@
         fecha.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) +
         (e ? ": " + e.titulo : ": sin entrenamiento"));
       var est = estadoDia(fecha, e);
-      b.appendChild(el("span", "n", String(n) + (est === "ok" ? " ✓" : est === "parcial" ? " ½" : "")));
+      var sufijoMarca = est === "guardado" ? " ★" : (est === "ok" ? " ✓" : est === "parcial" ? " ½" : "");
+      b.appendChild(el("span", "n", String(n) + sufijoMarca));
       if (e) b.appendChild(el("span", "t", e.titulo));
       b.addEventListener("click", (function (f) { return function () { seleccionar(f); }; })(fecha));
       cal.appendChild(b);
@@ -883,12 +885,19 @@
     }
     p.appendChild(el("h3", null, e.titulo));
     if (e.notas) p.appendChild(el("p", "notas", e.notas));
+    
+    var bloqueado = estaGuardadoDia(seleccionado);
+    var pd = progDia(false);
+
     if (e.descanso && !(e.ejercicios && e.ejercicios.length)) {
       p.appendChild(el("p", "vacio", "Hoy toca recuperar. Descansa bien y bebe agua."));
+      if (bloqueado && pd && pd.fechaGuardado) {
+        p.appendChild(el("p", "notas", "Entrenamiento guardado el " + pd.fechaGuardado + " ✓"));
+      }
       return;
     }
+
     var usa = !!fbConf();
-    var pd = progDia(false);
     var ul = el("ul", "ejercicios");
     (e.ejercicios || []).forEach(function (x, i) {
       var li = el("li", usa ? "item" : "");
@@ -903,7 +912,7 @@
           l2.appendChild(el("span", "nom", y.nombre));
           if (y.detalle) l2.appendChild(el("span", "det", y.detalle));
           l2.appendChild(mediaEj(y));
-          if (usa) l2.appendChild(regPeso(y, i + "." + j));
+          if (usa) l2.appendChild(regPeso(y, i + "." + j, bloqueado));
           sub.appendChild(l2);
         });
         box.appendChild(sub);
@@ -912,20 +921,20 @@
         cuerpo.appendChild(el("span", "nom", x.nombre));
         if (x.detalle) cuerpo.appendChild(el("span", "det", x.detalle));
         cuerpo.appendChild(mediaEj(x));
-        if (usa) cuerpo.appendChild(regPeso(x, String(i)));
+        if (usa) cuerpo.appendChild(regPeso(x, String(i), bloqueado));
       }
       if (usa) {
         var cb = el("input"); cb.type = "checkbox";
         cb.checked = !!(pd && pd.hechos && pd.hechos[i]);
-        cb.disabled = !progCargado;
+        cb.disabled = !progCargado || bloqueado;
         cb.setAttribute("aria-label", "Marcar como hecho");
         if (cb.checked) li.classList.add("hecho");
         cb.addEventListener("change", function () {
+          if (bloqueado) return;
           var d = progDia(true);
           if (cb.checked) d.hechos[i] = true; else delete d.hechos[i];
           li.classList.toggle("hecho", cb.checked);
           pintarCalendario();
-          programarGuardado();
         });
         li.appendChild(cb);
       }
@@ -933,7 +942,7 @@
       ul.appendChild(li);
     });
     p.appendChild(ul);
-    if (usa) pintarSeguimiento(p, pd);
+    if (usa) pintarSeguimiento(p, pd, bloqueado);
   }
 
   function recorrer(e, fn) {
@@ -956,7 +965,7 @@
     });
     return res;
   }
-  function regPeso(x, path) {
+  function regPeso(x, path, bloqueado) {
     var w = el("div", "peso");
     var pd = progDia(false), r = (pd && pd.pesos && pd.pesos[path]) || {};
     var u = ultimoRegistro(x.nombre);
@@ -967,11 +976,12 @@
     var f = el("div", "peso-f");
     function campoP(prop, etiqueta, ph, teclado) {
       var l = el("label"); l.appendChild(el("span", null, etiqueta));
-      var i = el("input"); i.value = r[prop] || ""; i.placeholder = ph; i.disabled = !progCargado;
+      var i = el("input"); i.value = r[prop] || ""; i.placeholder = ph; i.disabled = !progCargado || bloqueado;
       if (teclado) i.setAttribute("inputmode", teclado);
       i.addEventListener("input", function () {
+        if (bloqueado) return;
         var d = progDia(true); d.pesos = d.pesos || {}; d.pesos[path] = d.pesos[path] || {};
-        d.pesos[path][prop] = i.value; programarGuardado();
+        d.pesos[path][prop] = i.value;
       });
       l.appendChild(i); return l;
     }
@@ -981,7 +991,7 @@
     return w;
   }
 
-  function pintarSeguimiento(p, pd) {
+  function pintarSeguimiento(p, pd, bloqueado) {
     p.appendChild(el("hr", "sep"));
     p.appendChild(el("p", "editor-h", "Esfuerzo percibido"));
     p.appendChild(el("p", "vacio", "1 = muy fácil · 10 = esfuerzo máximo"));
@@ -994,11 +1004,12 @@
     for (var n = 1; n <= 10; n++) {
       (function (n) {
         var b = el("button", null, String(n));
-        b.type = "button"; b.disabled = !progCargado;
+        b.type = "button"; b.disabled = !progCargado || bloqueado;
         b.addEventListener("click", function () {
+          if (bloqueado) return;
           var d = progDia(true);
           d.esfuerzo = d.esfuerzo === n ? 0 : n;
-          marcar(); programarGuardado();
+          marcar();
         });
         botones.push(b); fila.appendChild(b);
       })(n);
@@ -1006,10 +1017,45 @@
     marcar();
     p.appendChild(fila);
     var lo = el("label", "obs-l", "Observaciones"); lo.setAttribute("for", "cObs");
-    var ta = el("textarea"); ta.id = "cObs"; ta.value = (pd && pd.obs) || ""; ta.disabled = !progCargado;
+    var ta = el("textarea"); ta.id = "cObs"; ta.value = (pd && pd.obs) || ""; ta.disabled = !progCargado || bloqueado;
     ta.placeholder = "Cómo te has sentido, pesos que has usado…";
-    ta.addEventListener("input", function () { progDia(true).obs = ta.value; programarGuardado(); });
+    ta.addEventListener("input", function () {
+      if (bloqueado) return;
+      progDia(true).obs = ta.value;
+    });
     p.appendChild(lo); p.appendChild(ta);
+
+    if (bloqueado && pd && pd.fechaGuardado) {
+      p.appendChild(el("p", "notas", "Entrenamiento guardado el " + pd.fechaGuardado + " ✓"));
+    } else if (!bloqueado) {
+      var btnGuardarEntreno = el("button", "btn full", "Guardar entrenamiento");
+      btnGuardarEntreno.type = "button";
+      btnGuardarEntreno.style.marginTop = "16px";
+      btnGuardarEntreno.addEventListener("click", function () {
+        if (!confirm("¿Guardar entrenamiento? Después no podrás editarlo.")) return;
+        btnGuardarEntreno.disabled = true;
+        btnGuardarEntreno.textContent = "Guardando en servidor...";
+        
+        var d = progDia(true);
+        d.guardado = true;
+        var ahora = new Date();
+        d.fechaGuardado = pad(ahora.getDate()) + "/" + pad(ahora.getMonth() + 1) + " a las " + pad(ahora.getHours()) + ":" + pad(ahora.getMinutes());
+        
+        guardarProgresoDirecto(function (err) {
+          d.guardado = false;
+          delete d.fechaGuardado;
+          btnGuardarEntreno.disabled = false;
+          btnGuardarEntreno.textContent = "Guardar entrenamiento";
+          aviso("No se pudo guardar (" + err.message + "). Inténtalo de nuevo.", true);
+        }, function () {
+          aviso("¡Entrenamiento guardado correctamente!");
+          pintarCalendario();
+          pintarPanel();
+        });
+      });
+      p.appendChild(btnGuardarEntreno);
+    }
+
     var st = el("p", "vacio"); st.id = "progEstado";
     p.appendChild(st);
   }
@@ -1026,9 +1072,13 @@
     for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
     var pes = [];
     if (e && p.pesos) recorrer(e, function (x, path) { var r = p.pesos[path]; if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r)); });
-    if (!h && !p.esfuerzo && !(p.obs || "").trim() && !pes.length) return;
+    
     var box = el("div", "resultado");
-    box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente"));
+    if (p.guardado) {
+      box.appendChild(el("p", "editor-h", "Realizado ✓" + (p.fechaGuardado ? " (Guardado el " + p.fechaGuardado + ")" : "")));
+    } else {
+      box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente (Aún no guardado definitivamente)"));
+    }
     if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
     if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
     if (pes.length) {
@@ -1036,6 +1086,26 @@
       pes.forEach(function (t) { box.appendChild(el("p", null, t)); });
     }
     if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
+    
+    if (modo === "admin" && p.guardado) {
+      var btnReabrir = el("button", "btn ghost", "Reabrir entrenamiento");
+      btnReabrir.type = "button";
+      btnReabrir.style.marginTop = "10px";
+      btnReabrir.addEventListener("click", function () {
+        if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
+        p.guardado = false;
+        guardarProgresoDirecto(function (err) {
+          p.guardado = true;
+          aviso("Error al reabrir: " + err.message, true);
+        }, function () {
+          aviso("Entrenamiento reabierto correctamente.");
+          pintarCalendario();
+          pintarPanel();
+        });
+      });
+      box.appendChild(btnReabrir);
+    }
+
     c.appendChild(box);
   }
 
