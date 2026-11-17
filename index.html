@@ -68,13 +68,21 @@
 
   /* ---------- Login ---------- */
   #login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-  .login-box { width: 100%; max-width: 380px; }
-  .login-box h1 { font-size: clamp(2.6rem, 11vw, 3.6rem); font-weight: 800; margin-bottom: 6px; }
+  .login-box { width: 100%; max-width: 460px; }
+  .login-box h1 {
+    font-size: clamp(1.8rem, 8vw, 2.65rem);
+    font-weight: 800; margin-bottom: 6px;
+    white-space: nowrap;
+  }
   .login-box h1 span {
-    background: var(--tape); color: #17262b; padding: 0 .18em;
+    display: inline-block; white-space: nowrap;
+    background: var(--tape); color: #17262b; padding: 0 .12em;
     box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
   .login-box p.sub { color: var(--muted); margin: 0 0 22px; }
+  @media (max-width: 340px) {
+    .login-box h1 { font-size: 1.65rem; }
+  }
 
   /* ---------- Cabecera ---------- */
   header.top {
@@ -222,7 +230,11 @@
   .resumen-ejercicio, .resumen-circuito { min-width: 0; border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; overflow-wrap: anywhere; }
   .resumen-ejercicio { display: grid; gap: 3px; }
   .resumen-sub { margin: 7px 0 0 10px; background: var(--chalk); }
-  .resumen-circuito { border-color: var(--accent); }
+  .resumen-circuito { border-color: var(--accent); display: flex; flex-direction: column; gap: 8px; }
+  .resumen-circuito-cabecera { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; min-width: 0; }
+  .resumen-circuito-nombre { color: var(--accent); }
+  .resumen-circuito-series { display: inline-block; margin-left: 2px; }
+  .resumen-circuito-ejercicios { display: grid; gap: 6px; min-width: 0; }
   .resumen-uso { color: var(--accent); font-size: .9rem; font-weight: 600; overflow-wrap: anywhere; }
   /* Evita cortes y desbordamientos en pantallas estrechas y escritorio */
   main, header, section, article, .panel, .resultado-card, .cols, .fila, .dos { min-width: 0; max-width: 100%; }
@@ -1206,9 +1218,16 @@
           (e.ejercicios || []).forEach(function (x, i) {
             if (x.tipo === "circuito") {
               var circ = el("section", "resumen-circuito");
-              circ.appendChild(el("strong", null, x.nombre || "Circuito"));
-              if (x.detalle) circ.appendChild(el("span", "det", x.detalle));
+              var cabeceraCirc = el("div", "resumen-circuito-cabecera");
+              cabeceraCirc.appendChild(el("strong", "resumen-circuito-nombre", x.nombre || "Circuito"));
+              if (x.detalle) cabeceraCirc.appendChild(el("span", "det resumen-circuito-series", x.detalle));
+              circ.appendChild(cabeceraCirc);
+              var ejerciciosCirc = el("div", "resumen-circuito-ejercicios");
               (x.ejercicios || []).forEach(function (y, j) { anadirResumen(y, i + "." + j, true); });
+              while (listaResumen.lastChild && listaResumen.lastChild.classList && listaResumen.lastChild.classList.contains("resumen-sub")) {
+                ejerciciosCirc.insertBefore(listaResumen.lastChild, ejerciciosCirc.firstChild);
+              }
+              circ.appendChild(ejerciciosCirc);
               listaResumen.appendChild(circ);
             } else anadirResumen(x, String(i), false);
           });
