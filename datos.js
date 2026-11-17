@@ -20,22 +20,26 @@ var DATOS = {
               "ejercicios": [
                 {
                   "nombre": "Sentadilla trasera con pausa",
-                  "detalle": "x4"
+                  "detalle": "x4",
+                  "familia": "SENTADILLA"
                 },
                 {
                   "nombre": "Salto al cajón desde sentado",
                   "detalle": "x6",
-                  "video": "https://youtu.be/64OAo8kINPQ"
+                  "video": "https://youtu.be/64OAo8kINPQ",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Power clean con pausa en tibia",
                   "detalle": "x4",
-                  "video": "https://youtube.com/shorts/e9ABzaEkWi8?si=OjRaCSjRcZpLWiPm"
+                  "video": "https://youtube.com/shorts/e9ABzaEkWi8?si=OjRaCSjRcZpLWiPm",
+                  "familia": "HALTEROFILIA"
                 },
                 {
                   "nombre": "Deadbug isométrico con fitball",
                   "detalle": "x30s/lado",
-                  "video": "https://youtu.be/4XDuP3L_2Q4"
+                  "video": "https://youtu.be/4XDuP3L_2Q4",
+                  "familia": "CORE"
                 }
               ]
             },
@@ -47,26 +51,31 @@ var DATOS = {
                 {
                   "nombre": "Peso muerto unilateral en landmine",
                   "detalle": "x4/lado",
-                  "video": "https://youtu.be/DAl7YiMe8DM"
+                  "video": "https://youtu.be/DAl7YiMe8DM",
+                  "familia": "PESO MUERTO"
                 },
                 {
                   "nombre": "Saltos horizontales",
-                  "detalle": "x6"
+                  "detalle": "x6",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Femoral isométrico en banco",
                   "detalle": "x30s/lado",
-                  "video": "https://www.youtube.com/shorts/ay0KSLRCvoc?feature=share"
+                  "video": "https://www.youtube.com/shorts/ay0KSLRCvoc?feature=share",
+                  "familia": "ISOMÉTRICO"
                 },
                 {
                   "nombre": "Landmine twist en caballero",
-                  "detalle": "x10"
+                  "detalle": "x10",
+                  "familia": "CORE"
                 }
               ]
             },
             {
               "nombre": "Cinta de correr",
-              "detalle": "4 km a 5:30 mins/km"
+              "detalle": "4 km a 5:30 mins/km",
+              "familia": "CARDIO"
             }
           ]
         },
