@@ -80,20 +80,24 @@ var DATOS = {
               "ejercicios": [
                 {
                   "nombre": "Press banca con pausa",
-                  "detalle": "x4"
+                  "detalle": "x4",
+                  "familia": "PRESS BANCA"
                 },
                 {
                   "nombre": "Empuje balístico con barra",
                   "detalle": "x6",
-                  "video": "https://www.youtube.com/shorts/pZ37oadcV2w?feature=share"
+                  "video": "https://www.youtube.com/shorts/pZ37oadcV2w?feature=share",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Lanzamiento de balón medicinal frontal",
-                  "detalle": "x6"
+                  "detalle": "x6",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Remoergómetro",
-                  "detalle": "500 m en 3 mins"
+                  "detalle": "500 m en 3 mins",
+                  "familia": "CARDIO"
                 }
               ]
             },
@@ -105,20 +109,24 @@ var DATOS = {
                 {
                   "nombre": "Remo pendlay",
                   "detalle": "x4",
-                  "video": "https://youtu.be/1zT1iugHBvo"
+                  "video": "https://youtu.be/1zT1iugHBvo",
+                  "familia": "REMO"
                 },
                 {
                   "nombre": "Remo invertido balístico",
                   "detalle": "x6",
-                  "video": "https://www.youtube.com/shorts/2TvD67YT6To?feature=share"
+                  "video": "https://www.youtube.com/shorts/2TvD67YT6To?feature=share",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Lanzamiento de balón medicinal lateral",
-                  "detalle": "x6/lado"
+                  "detalle": "x6/lado",
+                  "familia": "PLIOMETRÍA"
                 },
                 {
                   "nombre": "Remoergómetro",
-                  "detalle": "[150 m en 1-1:30 + 1 min descanso]x2"
+                  "detalle": "[150 m en 1-1:30 + 1 min descanso]x2",
+                  "familia": "CARDIO"
                 }
               ]
             },
@@ -130,11 +138,13 @@ var DATOS = {
                 {
                   "nombre": "Hang power snatch",
                   "detalle": "x4",
-                  "video": "https://youtu.be/z1j2QMBJF6c"
+                  "video": "https://youtu.be/z1j2QMBJF6c",
+                  "familia": "HALTEROFILIA"
                 },
                 {
                   "nombre": "Elevación lateral isométrica",
-                  "detalle": "x30s/lado"
+                  "detalle": "x30s/lado",
+                  "familia": "ISOMÉTRICO"
                 }
               ]
             }
