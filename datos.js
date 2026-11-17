@@ -196,8 +196,7 @@ var DATOS = {
                 {
                   "nombre": "Goblet pistol squat",
                   "detalle": "x6/lado",
-                  "video": "https://www.youtube.com/shorts/zWCs8-f-3Ks?feature=share",
-                  "familia": "PLIOMETRÍA"
+                  "video": "https://www.youtube.com/shorts/zWCs8-f-3Ks?feature=share"
                 },
                 {
                   "nombre": "Plancha moviendo kettlebell",
