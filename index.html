@@ -183,9 +183,15 @@
   .rpe button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .rpe button:disabled, .item input:disabled { opacity: .45; }
   .obs-l { margin-top: 16px; }
-  .resultado { background: var(--rest); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
-  .resultado p { margin: 0 0 6px; }
-  .resultado .notas { background: var(--card); }
+  
+  /* Tarjeta de resultado mejorada para el Entrenador */
+  .resultado-card { background: var(--card); border: 2px solid var(--accent); border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .resultado-card h4 { font-family: var(--head); font-size: 1.25rem; color: var(--accent); margin: 0 0 10px; display: flex; align-items: center; justify-content: space-between; }
+  .resultado-card .badge-ok { background: var(--accent); color: var(--accent-ink); font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+  .resultado-card p { margin: 0 0 8px; font-size: 0.95rem; }
+  .resultado-card .bloque-pesos { background: var(--rest); border-radius: 6px; padding: 10px; margin: 10px 0; }
+  .resultado-card .bloque-pesos ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+  .resultado-card .obs-box { background: var(--chalk); border-left: 4px solid var(--tape); padding: 8px 10px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 0.9rem; }
 
   /* ---------- Marca y login ---------- */
   #login { --chalk: #0f1c24; --card: #1a2b36; --line: #34495a; --ink: #f4f5f0; --muted: #a3b6c1; --accent: #ffd23f; --accent-ink: #0f1c24; background: var(--chalk); color: var(--ink); }
@@ -505,6 +511,7 @@
   var DIAS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
   var DIAS_TXT = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
   var CORTOS = ["L", "M", "X", "J", "V", "S", "D"];
+  var FAMILIAS_PERMITIDAS = ["SENTADILLA", "PESO MUERTO", "HIP THRUST", "PRESS BANCA", "PRESS MILITAR", "REMO", "DOMINADAS", "HALTEROFILIA", "CORE", "PLIOMETRÍA", "ISOMÉTRICO", "EXCÉNTRICO"];
 
   var tipoLogin = "cliente";
   var modo = null;            // "cliente" | "admin"
@@ -805,7 +812,7 @@
     cargarProgreso(c, function () {
       if (cliente !== c) return;
       pintarCalendario();
-      if (modo === "cliente") pintarVistaCliente(); else pintarResultado();
+      if (modo === "cliente") pintarVistaCliente(); else pintarPanel();
     });
   }
 
@@ -1060,200 +1067,155 @@
     p.appendChild(st);
   }
 
-  function pintarResultado() {
-    var c = $("resultado");
-    if (!c) return;
-    c.textContent = "";
-    if (!fbConf() || !seleccionado) return;
-    var p = progreso[clave(seleccionado)];
-    if (!p) return;
-    var e = entrenoDe(seleccionado);
-    var total = e && e.ejercicios ? e.ejercicios.length : 0, h = 0;
-    for (var i = 0; i < total; i++) if (p.hechos && p.hechos[i]) h++;
-    var pes = [];
-    if (e && p.pesos) recorrer(e, function (x, path) { var r = p.pesos[path]; if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r)); });
-    
-    var box = el("div", "resultado");
-    if (p.guardado) {
-      box.appendChild(el("p", "editor-h", "Realizado ✓" + (p.fechaGuardado ? " (Guardado el " + p.fechaGuardado + ")" : "")));
-    } else {
-      box.appendChild(el("p", "editor-h", "Lo que ha registrado el cliente (Aún no guardado definitivamente)"));
-    }
-    if (total) box.appendChild(el("p", null, "Completado: " + h + " de " + total));
-    if (p.esfuerzo) box.appendChild(el("p", null, "Esfuerzo percibido: " + p.esfuerzo + " / 10"));
-    if (pes.length) {
-      box.appendChild(el("p", "editor-h", "Pesos y repeticiones"));
-      pes.forEach(function (t) { box.appendChild(el("p", null, t)); });
-    }
-    if ((p.obs || "").trim()) box.appendChild(el("p", "notas", p.obs));
-    
-    if (modo === "admin" && p.guardado) {
-      var btnReabrir = el("button", "btn ghost", "Reabrir entrenamiento");
-      btnReabrir.type = "button";
-      btnReabrir.style.marginTop = "10px";
-      btnReabrir.addEventListener("click", function () {
-        if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
-        p.guardado = false;
-        guardarProgresoDirecto(function (err) {
-          p.guardado = true;
-          aviso("Error al reabrir: " + err.message, true);
-        }, function () {
-          aviso("Entrenamiento reabierto correctamente.");
-          pintarCalendario();
-          pintarPanel();
-        });
-      });
-      box.appendChild(btnReabrir);
-    }
-
-    c.appendChild(box);
-  }
-
-  /* ---------- Editor (admin) ---------- */
-  function mover(arr, i, d) {
-    var j = i + d;
-    if (j < 0 || j >= arr.length) return;
-    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
-    pintarEditor();
-  }
-  function controles(arr, i) {
-    var c = el("div", "ctrl");
-    var up = el("button", null, "↑"); up.type = "button"; up.setAttribute("aria-label", "Subir");
-    var dn = el("button", null, "↓"); dn.type = "button"; dn.setAttribute("aria-label", "Bajar");
-    var x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Quitar");
-    up.addEventListener("click", function () { mover(arr, i, -1); });
-    dn.addEventListener("click", function () { mover(arr, i, 1); });
-    x.addEventListener("click", function () { arr.splice(i, 1); pintarEditor(); });
-    c.appendChild(up); c.appendChild(dn); c.appendChild(x);
-    return c;
-  }
-  function campo(obj, prop, placeholder, key) {
-    var inp = el("input");
-    inp.value = obj[prop] || "";
-    inp.placeholder = placeholder;
-    if (key) inp.setAttribute("data-key", key);
-    inp.addEventListener("input", function () { obj[prop] = inp.value; });
-    return inp;
-  }
-  function reducir(file, cb) {
-    var img = new Image(), u = URL.createObjectURL(file);
-    img.onload = function () {
-      var k = Math.min(1, 800 / Math.max(img.width, img.height));
-      var c = document.createElement("canvas");
-      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(u);
-      cb(c.toDataURL("image/jpeg", 0.75));
-    };
-    img.src = u;
-  }
-  function selectorImagen(it) {
-    var w = el("div", "img-ed");
-    var f = el("input"); f.type = "file"; f.accept = "image/*";
-    var info = el("span", "vacio", it.imagen ? "Imagen cargada ✓" : "Sin imagen");
-    f.addEventListener("change", function () {
-      if (!f.files[0]) return;
-      reducir(f.files[0], function (url) {
-        var ruta = "imagenes/" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) + ".jpg";
-        pendientes[ruta] = url.split(",")[1];
-        it.imagen = ruta;
-        info.textContent = "Imagen lista ✓ (se sube al publicar)";
-      });
-    });
-    var q = el("button", "btn ghost", "Quitar imagen"); q.type = "button";
-    q.addEventListener("click", function () { delete pendientes[it.imagen]; delete it.imagen; info.textContent = "Sin imagen"; f.value = ""; });
-    w.appendChild(f); w.appendChild(info); w.appendChild(q);
-    return w;
-  }
-  function areaTexto(obj, prop, placeholder) {
-    var t = el("textarea", "desc-ed");
-    t.value = obj[prop] || ""; t.placeholder = placeholder;
-    t.addEventListener("input", function () { obj[prop] = t.value; });
-    return t;
-  }
-  function filaEjercicio(arr, i, key, sub) {
-    var it = arr[i];
-    var f = el("div", "fila" + (sub ? " sub" : ""));
-    var dos = el("div", "dos");
-    var ni = campo(it, "nombre", "Ejercicio", key);
-    ni.setAttribute("list", "dlEj");
-    ni.addEventListener("change", function () {
-      var a = biblioteca()[ni.value.trim().toLowerCase()], cambio = false;
-      if (!a) return;
-      ["familia", "detalle", "video", "imagen"].concat(area === "rehab" ? ["descripcion"] : []).forEach(function (k) { if (!it[k] && a[k]) { it[k] = a[k]; cambio = true; } });
-      if (cambio) pintarEditor();
-    });
-    dos.appendChild(ni);
-    var fi = campo(it, "familia", "Familia");
-    fi.setAttribute("list", "dlFam");
-    dos.appendChild(fi);
-    dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
-    dos.appendChild(campo(it, "video", "Vídeo (enlace)"));
-    dos.appendChild(selectorImagen(it));
-    if (area === "rehab") dos.appendChild(areaTexto(it, "descripcion", "Descripción (cómo se hace, precauciones…)"));
-    f.appendChild(dos);
-    f.appendChild(controles(arr, i));
-    return f;
-  }
-  function bloqueCircuito(arr, i) {
-    var it = arr[i];
-    var box = el("div", "circ-ed");
-    var cab = el("div", "fila");
-    var dos = el("div", "dos");
-    dos.appendChild(campo(it, "nombre", "Nombre del circuito", "c" + i));
-    dos.appendChild(campo(it, "detalle", "Ej. 3 rondas · 1 min"));
-    cab.appendChild(dos);
-    cab.appendChild(controles(arr, i));
-    box.appendChild(cab);
-    it.ejercicios = it.ejercicios || [];
-    it.ejercicios.forEach(function (_, j) { box.appendChild(filaEjercicio(it.ejercicios, j, i + "." + j, true)); });
-    var add = el("button", "btn ghost", "+ Ejercicio en el circuito");
-    add.type = "button";
-    add.addEventListener("click", function () {
-      it.ejercicios.push({ nombre: "", detalle: "" });
-      enfocar = i + "." + (it.ejercicios.length - 1);
-      pintarEditor();
-    });
-    box.appendChild(add);
-    return box;
-  }
-
-  function pintarEditor() {
-    if (area === "rehab") { pintarEditorRehab(); return; }
+  /* ================= Tarjeta de Resultados del Cliente (Entrenador) ================= */
+  function pintarResultadoEntrenador() {
     var p = $("panel");
     p.textContent = "";
     var f = seleccionado;
     p.appendChild(el("p", "fecha", f.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })));
 
+    var e = entrenoDe(f);
+    if (!e) {
+      p.appendChild(el("h3", null, "Sin entrenamiento"));
+      p.appendChild(el("p", "vacio", "No hay entrenamiento asignado para este día."));
+      return;
+    }
+
+    p.appendChild(el("h3", null, e.titulo));
+    if (e.notas) p.appendChild(el("p", "notas", e.notas));
+
+    var pr = progreso[clave(f)];
+    if (!pr || !pr.guardado) {
+      p.appendChild(el("p", "vacio", "El cliente aún no ha guardado este entrenamiento. (Puedes editar la pauta abajo si lo deseas)."));
+      p.appendChild(el("hr", "sep"));
+      pintarEditorFormularioBase(p, e);
+      return;
+    }
+
+    // Tarjeta limpia con los resultados del cliente
+    var card = el("div", "resultado-card");
+    var h4 = el("h4");
+    h4.appendChild(document.createTextNode("Registro del cliente"));
+    h4.appendChild(el("span", "badge-ok", "Realizado ✓"));
+    card.appendChild(h4);
+
+    if (pr.fechaGuardado) {
+      card.appendChild(el("p", "vacio", "Guardado el " + pr.fechaGuardado));
+    }
+
+    var total = (e.ejercicios || []).length, h = 0;
+    if (pr.hechos) {
+      for (var i = 0; i < total; i++) if (pr.hechos[i]) h++;
+    }
+    if (total) {
+      card.appendChild(el("p", null, "Ejercicios completados: " + h + " de " + total));
+    }
+
+    if (pr.esfuerzo) {
+      card.appendChild(el("p", null, "Esfuerzo percibido (RPE): " + pr.esfuerzo + " / 10"));
+    }
+
+    // Desglose de pesos
+    var pes = [];
+    if (e && pr.pesos) {
+      recorrer(e, function (x, path) {
+        var r = pr.pesos[path];
+        if (r && (r.kg || r.reps)) pes.push(x.nombre + ": " + textoPeso(r));
+      });
+    }
+
+    if (pes.length) {
+      var pPesos = el("div", "bloque-pesos");
+      pPesos.appendChild(el("strong", null, "Pesos y repeticiones aplicadas:"));
+      var ulP = el("ul");
+      pes.forEach(function (t) {
+        ulP.appendChild(el("li", null, t));
+      });
+      pPesos.appendChild(ulP);
+      card.appendChild(pPesos);
+    }
+
+    if ((pr.obs || "").trim()) {
+      var boxObs = el("div", "obs-box");
+      boxObs.appendChild(el("strong", null, "Observaciones del cliente:"));
+      boxObs.appendChild(el("p", null, pr.obs));
+      card.appendChild(boxObs);
+    }
+
+    // Botón Reabrir
+    var btnReabrir = el("button", "btn ghost full", "Reabrir entrenamiento al cliente");
+    btnReabrir.type = "button";
+    btnReabrir.style.marginTop = "14px";
+    btnReabrir.addEventListener("click", function () {
+      if (!confirm("¿Reabrir este entrenamiento para que el cliente pueda volver a editarlo?")) return;
+      pr.guardado = false;
+      guardarProgresoDirecto(function (err) {
+        pr.guardado = true;
+        aviso("Error al reabrir: " + err.message, true);
+      }, function () {
+        aviso("Entrenamiento reabierto correctamente.");
+        pintarCalendario();
+        pintarPanel();
+      });
+    });
+    card.appendChild(btnReabrir);
+    p.appendChild(card);
+
+    // Enlace sutil o botón para ver la pauta original si el entrenador quiere consultarla
+    var detPauta = el("details");
+    detPauta.style.marginTop = "20px";
+    var summary = el("summary", "vacio", "Ver / Editar pauta asignada");
+    summary.style.cursor = "pointer";
+    summary.style.fontWeight = "600";
+    detPauta.appendChild(summary);
+    
+    var pautaContent = el("div");
+    pautaContent.style.marginTop = "10px";
+    pintarEditorFormularioBase(pautaContent, e);
+    detPauta.appendChild(pautaContent);
+    p.appendChild(detPauta);
+  }
+
+  /* ---------- Editor (admin) común ---------- */
+  function pintarEditor() {
+    if (area === "rehab") { pintarEditorRehab(); return; }
+    if (modo === "admin") {
+      pintarResultadoEntrenador();
+      return;
+    }
+  }
+
+  function pintarEditorFormularioBase(container, eBase) {
     var dl = el("datalist"); dl.id = "dlEj"; var bib = biblioteca();
     Object.keys(bib).forEach(function (k) { var o = el("option"); o.value = bib[k].nombre; dl.appendChild(o); });
-    p.appendChild(dl);
-    var dlf = el("datalist"), fs = {}; dlf.id = "dlFam";
-    Object.keys(bib).forEach(function (k) { var fm = bib[k].familia; if (fm) fs[fm.toLowerCase()] = fm; });
-    Object.keys(fs).forEach(function (k) { var o = el("option"); o.value = fs[k]; dlf.appendChild(o); });
-    p.appendChild(dlf);
-    var rs = el("div"); rs.id = "resultado"; p.appendChild(rs); pintarResultado();
+    container.appendChild(dl);
+
+    var dlf = el("datalist"); dlf.id = "dlFam";
+    FAMILIAS_PERMITIDAS.forEach(function (fam) {
+      var o = el("option"); o.value = fam; dlf.appendChild(o);
+    });
+    container.appendChild(dlf);
 
     var lt = el("label", null, "Título del entrenamiento"); lt.setAttribute("for", "eTitulo");
     var ti = campo(borrador, "titulo", "Ej. Pierna, Empuje, Cardio"); ti.id = "eTitulo";
-    p.appendChild(lt); p.appendChild(ti);
+    container.appendChild(lt); container.appendChild(ti);
 
     var chk = el("label", "check");
     var cb = el("input"); cb.type = "checkbox"; cb.checked = borrador.descanso;
     cb.addEventListener("change", function () { borrador.descanso = cb.checked; pintarEditor(); });
     chk.appendChild(cb); chk.appendChild(document.createTextNode("Día de descanso"));
-    p.appendChild(chk);
+    container.appendChild(chk);
 
     var ln = el("label", null, "Notas (opcional)"); ln.setAttribute("for", "eNotas");
     var ta = el("textarea"); ta.id = "eNotas"; ta.value = borrador.notas || "";
     ta.placeholder = "Ej. Calentar 10 min antes de empezar.";
     ta.addEventListener("input", function () { borrador.notas = ta.value; });
-    p.appendChild(ln); p.appendChild(ta);
+    container.appendChild(ln); container.appendChild(ta);
 
     if (!borrador.descanso) {
-      p.appendChild(el("p", "editor-h", "Ejercicios"));
+      container.appendChild(el("p", "editor-h", "Ejercicios"));
       borrador.ejercicios.forEach(function (it, i) {
-        p.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
+        container.appendChild(it.tipo === "circuito" ? bloqueCircuito(borrador.ejercicios, i) : filaEjercicio(borrador.ejercicios, i, String(i), false));
       });
       var ac = el("div", "acciones");
       var b1 = el("button", "btn ghost", "+ Añadir ejercicio"); b1.type = "button";
@@ -1272,11 +1234,12 @@
         pintarEditor();
       });
       ac.appendChild(b1); ac.appendChild(b2);
-      p.appendChild(ac);
+      container.appendChild(ac);
     }
 
-    p.appendChild(el("hr", "sep"));
+    container.appendChild(el("hr", "sep"));
 
+    var f = seleccionado;
     var la = el("label", null, "Aplicar a"); la.setAttribute("for", "eAmbito");
     var sel = el("select"); sel.id = "eAmbito";
     var o1 = el("option", null, "Solo este día"); o1.value = "dia";
@@ -1284,7 +1247,7 @@
     sel.appendChild(o1); sel.appendChild(o2);
     sel.value = ambito;
     sel.addEventListener("change", function () { ambito = sel.value; });
-    p.appendChild(la); p.appendChild(sel);
+    container.appendChild(la); container.appendChild(sel);
 
     var g = el("div", "guardar");
     var bg = el("button", "btn", "Guardar día"); bg.type = "button";
@@ -1303,10 +1266,10 @@
       bs.addEventListener("click", quitarSemana);
       g.appendChild(bs);
     }
-    p.appendChild(g);
+    container.appendChild(g);
 
     if (enfocar !== null) {
-      var q = p.querySelector('[data-key="' + enfocar + '"]');
+      var q = container.querySelector('[data-key="' + enfocar + '"]');
       enfocar = null;
       if (q) q.focus();
     }
@@ -1749,7 +1712,7 @@
     var lim = limpiar(borrador, true);
     if (!lim) { aviso("Escribe al menos un título, unas notas o un ejercicio.", true); return; }
     delete lim.descanso;
-    var dst = DATOS.clientes[+$("csCliente").value];
+    var dst = DATOS.clientes[+$("csCliente"].value];
     sesiones(dst).push(lim);
     marcarSucio();
     $("dlgCopiaSesion").close();
@@ -1777,7 +1740,7 @@
     var v = $("cpFecha").value;
     if (!v) { $("cpError").textContent = "Elige la fecha de destino."; return; }
     var q = v.split("-"), dest = new Date(+q[0], +q[1] - 1, +q[2]);
-    var dst = DATOS.clientes[+$("cpCliente").value];
+    var dst = DATOS.clientes[+$("cpCliente"].value];
     var sem = $("cpTipo").value === "semana", n = sem ? 7 : 1;
     var o0 = sem ? new Date(seleccionado.getFullYear(), seleccionado.getMonth(), seleccionado.getDate() - idxSemana(seleccionado)) : seleccionado;
     var d0 = sem ? new Date(dest.getFullYear(), dest.getMonth(), dest.getDate() - idxSemana(dest)) : dest;
@@ -1915,19 +1878,6 @@
     }
     return s + "</svg>";
   }
-  function svgLinea(et, val) {
-    var W = 320, H = 170, pl = 18, pr = 18, pb = 20, pt = 24, n = val.length;
-    var lo = Math.min.apply(null, val), hi = Math.max.apply(null, val);
-    if (lo === hi) { lo -= 1; hi += 1; }
-    var pts = val.map(function (v, i) { return [n > 1 ? pl + i * (W - pl - pr) / (n - 1) : W / 2, pt + (hi - v) / (hi - lo) * (H - pb - pt)]; });
-    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img"><line x1="0" y1="' + (H - pb) + '" x2="' + W + '" y2="' + (H - pb) + '" stroke="var(--line)"/>' +
-      '<polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="' + pts.map(function (q) { return q.join(","); }).join(" ") + '"/>';
-    pts.forEach(function (q, i) {
-      s += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="3.5" fill="var(--accent)"/><text class="val" x="' + q[0] + '" y="' + (q[1] - 8) + '" text-anchor="middle">' + val[i] + "</text>" +
-        '<text x="' + q[0] + '" y="' + (H - 6) + '" text-anchor="middle">' + et[i] + "</text>";
-    });
-    return s + "</svg>";
-  }
   function semanas(n) {
     var h = new Date(), lun = new Date(h.getFullYear(), h.getMonth(), h.getDate() - idxSemana(h)), out = [];
     for (var w = n - 1; w >= 0; w--) {
@@ -1973,6 +1923,7 @@
     return o + "</svg>";
   }
   function pesosPorEjercicio() {
+    var familiasDeseadas = ["sentadilla", "peso muerto", "hip thrust", "press banca", "press militar", "remo", "dominadas", "halterofilia", "core"];
     var m = {};
     Object.keys(progreso).sort().forEach(function (k) {
       var pr = progreso[k]; if (!pr.pesos) return;
@@ -1981,8 +1932,12 @@
       recorrer(e, function (x, path) {
         var r = pr.pesos[path], kg = r ? numero(r.kg) : null;
         if (kg === null || !x.nombre) return;
-        var nom = x.nombre.trim(), fam = (x.familia || "").trim() || nom, fk = fam.toLowerCase(), vk = nom.toLowerCase();
-        var f = m[fk] = m[fk] || { n: fam, v: {} };
+        var fam = (x.familia || "").trim().toLowerCase();
+        if (familiasDeseadas.indexOf(fam) < 0) return;
+        
+        var nom = x.nombre.trim(), fk = fam, vk = nom.toLowerCase();
+        var famNombreReal = fam.toUpperCase();
+        var f = m[fk] = m[fk] || { n: famNombreReal, v: {} };
         var v = f.v[vk] = f.v[vk] || { n: nom, l: [] }, u = v.l[v.l.length - 1];
         if (u && u.k === k) u.kg = Math.max(u.kg, kg); else v.l.push({ k: k, kg: kg });
       });
@@ -2006,7 +1961,7 @@
     s.hidden = !fams.length;
     function dib() {
       var f = pe[s.value], cont = $("pgVar"); cont.textContent = "";
-      if (!f) { $("pgPeso").innerHTML = '<p class="vacio">Todavía no hay pesos registrados.</p>'; return; }
+      if (!f) { $("pgPeso").innerHTML = '<p class="vacio">Todavía no hay pesos registrados en las familias permitidas.</p>'; return; }
       var vs = Object.keys(f.v).map(function (k) { return f.v[k]; }).sort(function (a, b) { return b.l.length - a.l.length; });
       vs.forEach(function (v, i) { v.ci = i; v.on = i < 5; });
       function pintar() { $("pgPeso").innerHTML = svgLineas(vs.filter(function (v) { return v.on; })); }
