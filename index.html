@@ -1322,8 +1322,25 @@
       if (cambio) pintarPanel();
     });
     dos.appendChild(ni);
-    var fi = campo(it, "familia", "Familia (ej. SENTADILLA)");
-    fi.setAttribute("list", "dlFam");
+    var fi = el("select");
+    fi.setAttribute("aria-label", "Familia del ejercicio");
+    var opVacia = el("option", null, "Seleccionar familia…");
+    opVacia.value = "";
+    fi.appendChild(opVacia);
+    var familias = FAMILIAS_PERMITIDAS.slice();
+    var familiaActual = (it.familia || "").trim();
+    if (familiaActual && familias.indexOf(familiaActual.toUpperCase()) < 0) {
+      familias.push(familiaActual);
+    }
+    familias.forEach(function (fam) {
+      var op = el("option");
+      op.value = fam;
+      op.textContent = fam;
+      fi.appendChild(op);
+    });
+    fi.value = familiaActual ? (familias.find(function (fam) { return fam.toLowerCase() === familiaActual.toLowerCase(); }) || "") : "";
+    if (key) fi.setAttribute("data-key", key);
+    fi.addEventListener("change", function () { it.familia = fi.value; });
     dos.appendChild(fi);
     dos.appendChild(campo(it, "detalle", "Ej. 4 x 10 · 90 s"));
     dos.appendChild(campo(it, "video", "Vídeo (enlace)"));
