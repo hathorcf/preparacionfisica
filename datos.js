@@ -381,6 +381,11 @@ var DATOS = {
               "familia": "CARDIO"
             }
           ]
+        },
+        "2026-11-25": {
+          "titulo": "Descanso",
+          "ejercicios": [],
+          "descanso": true
         }
       },
       "mensaje": "Semana de estímulo concéntrico."
