@@ -310,8 +310,80 @@ var DATOS = {
               ]
             }
           ]
+        },
+        "2026-11-23": {
+          "titulo": "MMII",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla con pausa",
+                  "detalle": "x4",
+                  "video": "https://youtube.com/shorts/7_JEt_f1jFI?si=9ZU-cyFons571fjg",
+                  "familia": "SENTADILLA"
+                },
+                {
+                  "nombre": "Salto al cajón desde sentado",
+                  "detalle": "x6",
+                  "video": "https://youtu.be/64OAo8kINPQ",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Sentadilla pistol desde banco",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/TEYYLes8I78?si=wubXSJsy7dxEmFbW"
+                },
+                {
+                  "nombre": "Toes to bar",
+                  "detalle": "x10",
+                  "video": "https://youtube.com/shorts/0oKdbxDBbYc?si=VYOB1ihSJPG-qTwT",
+                  "familia": "CORE"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Peso muerto convencional",
+                  "detalle": "x4",
+                  "video": "https://youtube.com/shorts/4He_PO_ppKI?si=bhOpXT_XcRJkTtQF",
+                  "familia": "PESO MUERTO"
+                },
+                {
+                  "nombre": "Salto horizontal unilateral",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/OBmP9ZIZs7g?si=jjmFc3c0gaq9B0Gu",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Femoral isométrico en banco",
+                  "detalle": "x30s/lado",
+                  "video": "https://youtube.com/shorts/ay0KSLRCvoc?si=E__bCGvlIdSXZKyW",
+                  "familia": "ISOMÉTRICO"
+                },
+                {
+                  "nombre": "Landmine twist",
+                  "detalle": "x10/lado",
+                  "video": "https://youtube.com/shorts/-iEsKYDdi0E?si=J2N1ubfHzHU5ZQjx",
+                  "familia": "Core"
+                }
+              ]
+            },
+            {
+              "nombre": "Cinta de correr",
+              "detalle": "4 km a 5:30 mins/km",
+              "familia": "CARDIO"
+            }
+          ]
         }
-      }
+      },
+      "mensaje": "Semana de estímulo concéntrico."
     },
     {
       "id": "mwamtikc9z6q",
