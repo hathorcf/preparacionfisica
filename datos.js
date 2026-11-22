@@ -386,6 +386,81 @@ var DATOS = {
           "titulo": "Descanso",
           "ejercicios": [],
           "descanso": true
+        },
+        "2026-11-26": {
+          "titulo": "MMII",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Sentadilla frontal con pausa",
+                  "detalle": "x4",
+                  "video": "https://youtube.com/shorts/P-AQdeZkJYY?si=PaSpqyHguxrTd_O6",
+                  "familia": "SENTADILLA"
+                },
+                {
+                  "nombre": "Pogos asistidos con goma",
+                  "detalle": "x8",
+                  "video": "https://youtube.com/shorts/SmIq7V8WUGs?si=nmimfVxSvO-ZM20s",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Zancada isométrica con mancuernas",
+                  "detalle": "x30s/lado",
+                  "video": "https://youtube.com/shorts/Gl2Rsn-gJYQ?si=DSOWnlLUKMZf7vyi",
+                  "familia": "ISOMÉTRICO"
+                },
+                {
+                  "nombre": "Plancha moviendo kettlebell",
+                  "detalle": "x30s",
+                  "video": "https://www.youtube.com/shorts/odo0h50hfwY?feature=share",
+                  "familia": "CORE"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hip thrust",
+                  "detalle": "x4",
+                  "video": "https://www.youtube.com/shorts/9xJHFG11Sj8?feature=share",
+                  "familia": "HIP THRUST"
+                },
+                {
+                  "nombre": "Sprint airbike",
+                  "detalle": "4x10s / 10s descanso entre reps",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Hang power clean con pausa",
+                  "detalle": "x6",
+                  "video": "https://youtu.be/xuX2AlIl1zo?si=MGipFw5JO3GFadKo",
+                  "familia": "Olímpicos"
+                },
+                {
+                  "nombre": "Deadbug con disco",
+                  "detalle": "x10/lado",
+                  "video": "https://youtube.com/shorts/qwQOTaw-yoI?si=K6b7lSX3pZ-xcuzD",
+                  "familia": "CORE"
+                }
+              ]
+            },
+            {
+              "nombre": "Máquina de cuádriceps",
+              "detalle": "3x10"
+            },
+            {
+              "nombre": "Belt squat",
+              "detalle": "3x10",
+              "video": "https://youtube.com/shorts/9fEloOw3hTo?si=ryv82xVEU1wBdOt4"
+            }
+          ]
         }
       },
       "mensaje": "Semana de estímulo concéntrico."
