@@ -546,6 +546,76 @@ var DATOS = {
               ]
             }
           ]
+        },
+        "2026-11-27": {
+          "titulo": "MMSS",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press inclinado con mancuernas (y pausa)",
+                  "detalle": "x6"
+                },
+                {
+                  "nombre": "Empuje balístico con barra",
+                  "detalle": "x6",
+                  "video": "https://www.youtube.com/shorts/pZ37oadcV2w?feature=share",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Snatch con mancuerna",
+                  "detalle": "x6/lado",
+                  "video": "https://youtu.be/xA_DpewzL7c?si=-VswuGCnzrUbli1t",
+                  "familia": "Empuje"
+                },
+                {
+                  "nombre": "Remo bird dog en banco",
+                  "detalle": "x6-8/lado",
+                  "video": "https://www.youtube.com/shorts/Xnccgl4FaRI?feature=share"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Dominadas agarre prono",
+                  "detalle": "x6",
+                  "familia": "DOMINADAS"
+                },
+                {
+                  "nombre": "Remo invertido isométrico",
+                  "detalle": "x6",
+                  "video": "https://www.youtube.com/shorts/2TvD67YT6To?feature=share",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Push jerk landmine",
+                  "detalle": "4x2",
+                  "video": "https://youtube.com/shorts/Et-M3yJin7Q?si=r_bZ-NKRhlZnP1_A"
+                },
+                {
+                  "nombre": "Lanzamiento de balón medicinal lateral",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/02c2YLgF8iE?si=fpwVO8FDcqpRigDZ",
+                  "familia": "PLIOMETRÍA"
+                }
+              ]
+            },
+            {
+              "nombre": "Bíceps en barra z",
+              "detalle": "3x10"
+            },
+            {
+              "nombre": "Tríceps en polea con cuerdas",
+              "detalle": "3x10"
+            }
+          ]
         }
       },
       "mensaje": "Semana de estímulo concéntrico."
