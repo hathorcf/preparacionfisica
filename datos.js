@@ -461,6 +461,91 @@ var DATOS = {
               "video": "https://youtube.com/shorts/9fEloOw3hTo?si=ryv82xVEU1wBdOt4"
             }
           ]
+        },
+        "2026-11-24": {
+          "titulo": "MMSS",
+          "ejercicios": [
+            {
+              "tipo": "circuito",
+              "nombre": "C1",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Press banca con pausa",
+                  "detalle": "x4",
+                  "familia": "PRESS BANCA"
+                },
+                {
+                  "nombre": "Flexiones balísticas sobre discos",
+                  "detalle": "x4",
+                  "video": "https://youtube.com/shorts/ypYDcHXSlFw?si=Xktzk8jdlmEZJP2r",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Clean and press mancuerna",
+                  "detalle": "x6/lado",
+                  "video": "https://youtube.com/shorts/Vybf1RohRlw?si=dJOUoar2VfupVS3a"
+                },
+                {
+                  "nombre": "Remoergómetro",
+                  "detalle": "400 m en 3 mins",
+                  "familia": "CARDIO"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C2",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Remo pendlay",
+                  "detalle": "x4",
+                  "video": "https://youtu.be/1zT1iugHBvo",
+                  "familia": "REMO"
+                },
+                {
+                  "nombre": "Ball slam",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/reIpHeafMuc?si=krg1ULWzmw-Cb9ZK",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Elevación lateral isométrica",
+                  "detalle": "x30s/lado",
+                  "familia": "ISOMÉTRICO"
+                },
+                {
+                  "nombre": "Remoergómetro",
+                  "detalle": "200 m en 2 mins",
+                  "familia": "CARDIO"
+                }
+              ]
+            },
+            {
+              "tipo": "circuito",
+              "nombre": "C3",
+              "detalle": "3 series",
+              "ejercicios": [
+                {
+                  "nombre": "Hang power snatch",
+                  "detalle": "x4",
+                  "video": "https://youtu.be/z1j2QMBJF6c",
+                  "familia": "HALTEROFILIA"
+                },
+                {
+                  "nombre": "Lanzamiento de balón medicinal frontal",
+                  "detalle": "x6",
+                  "video": "https://youtube.com/shorts/PH0HKU36zpY?si=htS7o40rhulirPaA",
+                  "familia": "PLIOMETRÍA"
+                },
+                {
+                  "nombre": "Ángel boca abajo en colchoneta",
+                  "detalle": "x10"
+                }
+              ]
+            }
+          ]
         }
       },
       "mensaje": "Semana de estímulo concéntrico."
